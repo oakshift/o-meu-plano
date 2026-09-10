@@ -14,6 +14,8 @@ let limpezaEcra = null;
 let ecraAtual = null;
 
 function ir(nome) {
+  // Enquanto não houver perfil, "casa" ainda não faz sentido: volta ao início.
+  if (nome === "casa" && !obter().perfil.criadoEm) { boasVindas(); return; }
   ecraAtual = nome;
   if (limpezaEcra) { limpezaEcra(); limpezaEcra = null; }
   limpar(raiz);
@@ -48,7 +50,10 @@ function boasVindas() {
       }
     }, "Começar")
   ]));
-  raiz.appendChild(el("p", { class: "ajuda", style: "text-align:center;margin-top:20px" }, "Pais: o painel está no ícone 👤, com o PIN 2468."));
+  raiz.appendChild(el("button", {
+    class: "btn", style: "width:100%;margin-top:18px", onClick: () => ir("pais")
+  }, "👤  Sou o pai ou a mãe"));
+  raiz.appendChild(el("p", { class: "ajuda", style: "text-align:center;margin-top:10px" }, "O painel dos pais abre com o PIN 2468."));
 }
 
 // ---------- arranque ----------

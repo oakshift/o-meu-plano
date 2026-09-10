@@ -23,7 +23,10 @@ export function render(raiz, ir) {
       el("h1", { class: "ola", texto: `${saudacao()}${nome ? ", " + nome : ""}` }),
       el("p", { class: "sub", texto: ativas.length === 0 ? "Hoje não há missões." : (tudoFeitoHoje() ? "Missões todas feitas. O dia é teu." : `${feitas} de ${ativas.length} ${ativas.length === 1 ? "missão feita" : "missões feitas"} hoje`) })
     ]),
-    el("button", { class: "btn btn-fantasma", style: "min-height:44px;padding:8px 12px", onClick: () => ir("pais") }, "👤")
+    el("button", {
+      class: "btn", style: "min-height:46px;padding:10px 16px;font-size:15px;flex:0 0 auto",
+      onClick: () => ir("pais")
+    }, "👤  Pais")
   ]));
 
   if (tudoFeitoHoje()) {

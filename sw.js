@@ -1,6 +1,6 @@
 // Service worker: guarda a app para funcionar sem internet.
 // Sempre que se publica uma versão nova, sobe-se o número da VERSAO.
-const VERSAO = "v1";
+const VERSAO = "v2";
 const CACHE = `plano-${VERSAO}`;
 
 const FICHEIROS = [
