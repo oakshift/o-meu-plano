@@ -169,7 +169,14 @@ iPad, perde-se tudo.** Exportem de vez em quando (Definições → Exportar).
 rotação no dia seguinte. Para uso familiar no iPad podem usar o que
 quiserem; só não vale a pena publicar textos protegidos no repositório.
 
-**Histórias AaZ:** a app traz um catálogo de 24 histórias de autores
-portugueses da Iniciativa Educação, com ligação direta. Os textos não são
-copiados — abrem no site original, que tem também vídeo da história
-contada. Ouvir primeiro e ler a seguir é exatamente o ciclo certo.
+**Histórias AaZ:** 24 histórias de autores portugueses da Iniciativa
+Educação. O vídeo de cada uma toca dentro da app — ouvir primeiro e ler a
+seguir é exatamente o ciclo certo.
+
+O texto, esse, continua a abrir no site: são obras com direitos de autor e
+não podem ser copiadas para um repositório público. Mas há uma saída, e vale
+a pena usá-la: em *Textos*, o primeiro campo pergunta se aquilo é uma
+história AaZ. Se colarem lá o texto e escolherem a história, ela passa a
+funcionar como qualquer outra — vídeo em cima, texto por baixo, três
+leituras, sem sair da app. Esse texto fica guardado só no iPad e nunca é
+publicado, o que é uso familiar e legítimo.

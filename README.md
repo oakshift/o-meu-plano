@@ -46,10 +46,11 @@ hora de regresso e o registo. O iOS é a cerca, a app é o volante.
 - **11 competências** de cálculo, do "fazer 10" às tabuadas do 6 ao 9 e às
   divisões, com ligação à Khan Academy quando o erro parece conceptual.
 - **90 palavras** em 9 famílias de padrões difíceis, com divisão silábica.
-- **Catálogo das 24 Histórias AaZ** (Iniciativa Educação) — apenas título,
-  autor, contagem de palavras e ligação. Os textos não são copiados: são
-  obras protegidas, e abrem no site original, que tem vídeo da história
-  contada.
+- **As 24 Histórias AaZ** (Iniciativa Educação) — o vídeo oficial de cada
+  história toca dentro da app, pelo player do YouTube. Os textos não são
+  copiados: são obras protegidas, e abrem no site original. Quem quiser o
+  ciclo completo sem sair da app cola o texto no painel dos pais e associa-o
+  à história — fica guardado apenas no dispositivo.
 
 ## Estrutura
 
@@ -65,7 +66,7 @@ js/  app.js         router
      audio.js       voz (pt-PT) e gravação
      leitura.js  matematica.js  silabas.js  tempo.js  progresso.js  pais.js
 data/ textos.js  matematica.js  palavras.js  aaz.js
-_teste.html         33 testes — abrir num servidor local
+_teste.html         38 testes — abrir num servidor local
 ```
 
 Sem dependências, sem build, sem passo de compilação. JavaScript com módulos

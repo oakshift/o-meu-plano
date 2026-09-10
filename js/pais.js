@@ -7,6 +7,7 @@
 // leituras repetidas do dia a dia medem esforço, não nível.
 
 import { TEXTOS, contarPalavras } from "../data/textos.js";
+import { HISTORIAS_AAZ } from "../data/aaz.js";
 import { obter, alterar, hojeISO, ultimosDias, exportarJSON, importarJSON, reiniciarTudo, missoesAtivas } from "./store.js";
 import { el, limpar, mmss, som, cabecalho, confirmar, baralhar } from "./ui.js";
 import { COMPETENCIAS, progressoCompetencia, dominada } from "./matematica.js";
@@ -394,7 +395,24 @@ export function render(raiz, ir) {
     ]);
     nivel.value = String(obter().config.nivelLeitura);
 
+    // Associar o texto a uma história AaZ faz com que ela deixe de precisar
+    // do site: o vídeo é o modelo e o texto fica aqui, no dispositivo.
+    const jaAssociadas = new Set(obter().textosProprios.map(t => t.aazSlug).filter(Boolean));
+    const aaz = el("select", {}, [
+      el("option", { value: "" }, "Não — é um texto vosso"),
+      ...HISTORIAS_AAZ.filter(h => !jaAssociadas.has(h.slug))
+        .map(h => el("option", { value: h.slug }, `${h.titulo}${h.autor ? " — " + h.autor : ""} (${h.palavras} palavras)`))
+    ]);
+    aaz.addEventListener("change", () => {
+      const h = HISTORIAS_AAZ.find(x => x.slug === aaz.value);
+      if (h && !titulo.value.trim()) titulo.value = h.titulo;
+    });
+
     raiz.appendChild(el("div", { class: "painel" }, [
+      el("div", { class: "campo" }, [
+        el("label", { texto: "É o texto de uma história AaZ?" }), aaz,
+        el("p", { class: "ajuda" }, "Se sim, a história passa a ler-se toda dentro da app: o vídeo faz de modelo e ele lê o texto três vezes, sem sair para o site.")
+      ]),
       el("div", { class: "campo" }, [el("label", { texto: "Título" }), titulo]),
       el("div", { class: "campo" }, [el("label", { texto: "Texto" }), corpo]),
       el("div", { class: "campo" }, [el("label", { texto: "Nível" }), nivel]),
@@ -405,14 +423,15 @@ export function render(raiz, ir) {
           alterar(s => {
             s.textosProprios.push({
               id: "p" + Date.now(), titulo: titulo.value.trim(),
-              texto: corpo.value.trim(), nivel: Number(nivel.value), perguntas: []
+              texto: corpo.value.trim(), nivel: Number(nivel.value),
+              aazSlug: aaz.value || null, perguntas: []
             });
           });
           som("certo");
           textos();
         }
       }, "Guardar texto"),
-      el("p", { class: "ajuda" }, "Nota: não copie para aqui textos protegidos por direitos de autor para depois publicar — para uso familiar neste dispositivo não há problema.")
+      el("p", { class: "ajuda" }, "Estes textos ficam guardados apenas neste dispositivo e nunca são publicados — é uso familiar. Não os copiem para o repositório.")
     ]));
 
     const meus = obter().textosProprios;
@@ -422,7 +441,7 @@ export function render(raiz, ir) {
         ...meus.map(t => el("div", { class: "linha", style: "border-bottom:1px solid var(--borda);padding:10px 0" }, [
           el("div", { style: "flex:1" }, [
             el("div", { style: "font-weight:600", texto: t.titulo }),
-            el("div", { class: "ajuda", texto: `${contarPalavras(t.texto)} palavras · nível ${t.nivel}` })
+            el("div", { class: "ajuda", texto: `${contarPalavras(t.texto)} palavras · nível ${t.nivel}${t.aazSlug ? " · história AaZ" : ""}` })
           ]),
           el("button", {
             class: "btn btn-fantasma", onClick: () => {

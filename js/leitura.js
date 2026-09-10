@@ -14,6 +14,27 @@ import * as audio from "./audio.js";
 
 const TENTATIVAS = 3;
 
+// Player oficial do YouTube (mecanismo de partilha da própria plataforma).
+// Domínio nocookie e rel=0 para não encher o fim do vídeo com sugestões
+// aleatórias — é uma criança de oito anos que está do outro lado.
+function caixaVideo(videoId, titulo) {
+  return el("div", { class: "video" }, [
+    el("iframe", {
+      src: `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1&playsinline=1`,
+      title: `${titulo} — história contada`,
+      allow: "accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen",
+      allowfullscreen: true,
+      loading: "lazy"
+    })
+  ]);
+}
+
+// Texto que os pais tenham associado a uma história AaZ. Fica só no
+// dispositivo — nunca entra no repositório.
+function textoLocalDaHistoria(slug) {
+  return obter().textosProprios.find(t => t.aazSlug === slug) || null;
+}
+
 export function ppm(palavras, segundos) {
   if (!segundos || segundos < 1) return 0;
   return Math.round(palavras / (segundos / 60));
@@ -35,7 +56,10 @@ export function melhorPPMGeral() {
 function textosDisponiveis() {
   const s = obter();
   const nivel = s.config.nivelLeitura;
-  const proprios = s.textosProprios.map(t => ({ ...t, fonte: "proprio", nivel: t.nivel || nivel }));
+  // Os associados a uma história AaZ vivem na lista das histórias, não aqui.
+  const proprios = s.textosProprios
+    .filter(t => !t.aazSlug)
+    .map(t => ({ ...t, fonte: "proprio", nivel: t.nivel || nivel }));
   const daApp = TEXTOS.filter(t => t.nivel === nivel).map(t => ({ ...t, fonte: "app" }));
   return [...daApp, ...proprios];
 }
@@ -110,15 +134,16 @@ export function render(raiz, ir) {
   function menuAaz() {
     trocar(null);
     limpar(raiz);
-    raiz.appendChild(cabecalho("Histórias AaZ", "Histórias de escritores portugueses. Abres a história no site, lês, e voltas aqui.", menu));
+    raiz.appendChild(cabecalho("Histórias AaZ", "Histórias de escritores portugueses, contadas em vídeo.", menu));
     raiz.appendChild(el("div", { class: "aviso info" }, [
-      el("p", { style: "margin:0" }, "Muitas destas páginas têm a história contada em vídeo. Ouve primeiro, depois lê tu.")
+      el("p", { style: "margin:0" }, "Ouve primeiro a história toda. Depois lês tu — é aí que ganhas velocidade.")
     ]));
     const grelha = el("div", { class: "missoes" });
     for (const h of HISTORIAS_AAZ) {
       const recorde = melhorPPM("aaz-" + h.slug);
+      const completa = !!textoLocalDaHistoria(h.slug);
       grelha.appendChild(el("button", { class: "missao m-leitura", onClick: () => sessaoAaz(h) }, [
-        el("div", { class: "icone", texto: "🔗" }),
+        el("div", { class: "icone", texto: completa ? "📖" : "▶️" }),
         el("div", { class: "texto" }, [
           el("div", { class: "titulo", texto: h.titulo }),
           el("div", { class: "detalhe", texto: `${h.autor ? h.autor + " · " : ""}${h.palavras} palavras${recorde ? ` · recorde ${recorde} ppm` : ""}` })
@@ -134,7 +159,7 @@ export function render(raiz, ir) {
 
   // ---------- sessão de leitura repetida (texto dentro da app) ----------
 
-  function sessao(texto) {
+  function sessao(texto, config = {}) {
     const palavras = contarPalavras(texto.texto);
     const tentativas = [];
     let tentativa = 0;
@@ -142,7 +167,10 @@ export function render(raiz, ir) {
     function passoOuvir() {
       trocar(null);
       limpar(raiz);
-      raiz.appendChild(cabecalho(texto.titulo, "Primeiro ouve. Segue com os olhos, sem ler em voz alta.", menu));
+      raiz.appendChild(cabecalho(texto.titulo, "Primeiro ouve. Segue com os olhos, sem ler em voz alta.", config.voltar || menu));
+
+      // Com vídeo, o modelo é um leitor a sério — melhor do que a voz do iPad.
+      if (config.video) raiz.appendChild(caixaVideo(config.video, texto.titulo));
 
       const corpo = el("div", { class: "painel" }, [el("p", { class: "texto-leitura", texto: texto.texto })]);
       raiz.appendChild(corpo);
@@ -158,7 +186,7 @@ export function render(raiz, ir) {
       });
       btnSaltar.addEventListener("click", () => { audio.pararDeFalar(); passoLer(); });
 
-      if (audio.temVoz()) raiz.appendChild(btnOuvir);
+      if (audio.temVoz() && !config.video) raiz.appendChild(btnOuvir);
       raiz.appendChild(btnSaltar);
       trocar(() => audio.pararDeFalar());
     }
@@ -168,7 +196,7 @@ export function render(raiz, ir) {
       limpar(raiz);
       tentativa++;
       const ordinal = ["primeira", "segunda", "terceira"][tentativa - 1] || `${tentativa}.ª`;
-      raiz.appendChild(cabecalho(`Leitura ${ordinal}`, `Lê em voz alta, do princípio ao fim. Sem pressa de errar.`, menu));
+      raiz.appendChild(cabecalho(`Leitura ${ordinal}`, `Lê em voz alta, do princípio ao fim. Sem pressa de errar.`, config.voltar || menu));
 
       if (tentativas.length) {
         const ult = tentativas[tentativas.length - 1];
@@ -215,7 +243,7 @@ export function render(raiz, ir) {
       limpar(raiz);
       const atual = tentativas[tentativas.length - 1];
       const anterior = tentativas.length > 1 ? tentativas[tentativas.length - 2] : null;
-      const recordeAntigo = melhorPPM(texto.id);
+      const recordeAntigo = melhorPPM(config.idRegisto || texto.id);
       const bateuRecorde = atual.ppm > recordeAntigo && recordeAntigo > 0;
 
       raiz.appendChild(cabecalho("Resultado", null, menu));
@@ -284,7 +312,7 @@ export function render(raiz, ir) {
     function terminar(compreensao) {
       alterar(s => {
         s.leitura.sessoes.push({
-          data: hojeISO(), textoId: texto.id, titulo: texto.titulo,
+          data: hojeISO(), textoId: config.idRegisto || texto.id, titulo: texto.titulo,
           fonte: texto.fonte || "app", tentativas, compreensao
         });
       });
@@ -313,27 +341,45 @@ export function render(raiz, ir) {
     passoOuvir();
   }
 
-  // ---------- sessão AaZ (texto lido no site original) ----------
+  // ---------- sessão AaZ ----------
+  //
+  // O vídeo da história toca dentro da app. O texto é que continua a não ser
+  // copiado: ou abre no site, ou os pais colam-no no painel deles — e nesse
+  // caso a história passa a fazer o ciclo completo aqui dentro.
 
   function sessaoAaz(h) {
     trocar(null);
     limpar(raiz);
     const id = "aaz-" + h.slug;
+    const local = textoLocalDaHistoria(h.slug);
+
+    if (local) {
+      return sessao(
+        { ...local, titulo: h.titulo, fonte: "aaz" },
+        { video: h.video, idRegisto: id, voltar: menuAaz }
+      );
+    }
+
     raiz.appendChild(cabecalho(h.titulo, h.autor || null, menuAaz));
+    if (h.video) raiz.appendChild(caixaVideo(h.video, h.titulo));
+
     raiz.appendChild(el("div", { class: "painel" }, [
-      el("p", {}, "1. Abre a história e ouve o vídeo, se houver."),
-      el("p", {}, "2. Volta aqui e carrega em Começar."),
-      el("p", { style: "margin-bottom:0" }, "3. Lê em voz alta no site. Quando acabares, volta e carrega em Acabei.")
+      el("p", {}, "1. Ouve a história aqui em cima."),
+      el("p", {}, "2. Abre o texto e carrega em Começar."),
+      el("p", { style: "margin-bottom:0" }, "3. Lê em voz alta. Quando acabares, volta e carrega em Acabei.")
     ]));
-    raiz.appendChild(el("a", { class: "btn btn-grande", href: h.url, target: "_blank", rel: "noopener", style: "margin-bottom:12px" }, "Abrir a história ↗"));
+    raiz.appendChild(el("a", { class: "btn btn-grande", href: h.url, target: "_blank", rel: "noopener", style: "margin-bottom:12px" }, "Abrir o texto ↗"));
 
     const relogio = el("div", { class: "numero-medio centrado", texto: "0:00", style: "margin:10px 0" });
     const btn = el("button", { class: "btn btn-grande btn-leitura" }, "Começar");
     raiz.appendChild(relogio);
     raiz.appendChild(btn);
 
-    // O cronómetro conta pelo relógio real: ele vai sair da app para ler no
-    // site e o Safari suspende a página enquanto isso acontece.
+    raiz.appendChild(el("p", { class: "ajuda", style: "margin-top:14px" },
+      "Pais: se colarem o texto desta história no vosso painel, ela passa a ler-se toda aqui dentro, sem sair da app."));
+
+    // O cronómetro conta pelo relógio real: ele vai sair da app para ler o
+    // texto no site e o Safari suspende a página enquanto isso acontece.
     let inicio = null, cron = null;
     btn.addEventListener("click", () => {
       if (!inicio) {

@@ -121,6 +121,13 @@ try {
   t("aaz: 24 histórias com url e contagem", () =>
     aaz.HISTORIAS_AAZ.length === 24 &&
     aaz.HISTORIAS_AAZ.every(h => h.url.startsWith("https://") && h.palavras > 0) || "catálogo incompleto");
+  t("aaz: todas as histórias têm vídeo com id válido", () =>
+    aaz.HISTORIAS_AAZ.every(x => typeof x.video === "string" && /^[A-Za-z0-9_-]{11}$/.test(x.video))
+    || "id de vídeo inválido: " + aaz.HISTORIAS_AAZ.filter(x => !x.video).map(x => x.slug).join(", "));
+  t("aaz: ids de vídeo não repetidos", () => {
+    const v = aaz.HISTORIAS_AAZ.map(x => x.video);
+    return new Set(v).size === v.length || "vídeo repetido entre histórias";
+  });
   t("aaz: nenhum texto copiado", () =>
     aaz.HISTORIAS_AAZ.every(h => !("texto" in h)) || "há texto copiado no catálogo");
 
@@ -183,6 +190,64 @@ try {
       return alvo.children.length > 0 || "não desenhou nada";
     });
   }
+
+  // navegação real até uma história AaZ, para confirmar o player embutido
+  t("aaz: abrir uma história mostra o player do YouTube", () => {
+    const z = document.createElement("div");
+    document.body.appendChild(z);
+    leitura.render(z, () => {});
+    const btnAaz = [...z.querySelectorAll("button")].find(b => /Hist√≥rias AaZ|Histórias AaZ/.test(b.textContent));
+    if (!btnAaz) return "não encontrei o botão das Histórias AaZ";
+    btnAaz.click();
+    const cartao = z.querySelector(".missao");
+    if (!cartao) return "a lista de histórias veio vazia";
+    const titulo = cartao.textContent;
+    cartao.click();
+    const ifr = z.querySelector("iframe");
+    if (!ifr) return `abri "${titulo.slice(0,30)}" e não há iframe`;
+    const src = ifr.getAttribute("src") || "";
+    if (!src.includes("youtube-nocookie.com/embed/")) return "src inesperado: " + src;
+    if (!/[A-Za-z0-9_-]{11}\?rel=0/.test(src)) return "id ou parâmetros em falta: " + src;
+    z.remove();
+    return true;
+  });
+
+  t("aaz: história com texto associado faz o ciclo completo sem sair", () => {
+    // simula os pais a colarem o texto de uma história
+    const slug = aaz.HISTORIAS_AAZ[0].slug;
+    store.alterar(s => {
+      s.textosProprios = s.textosProprios.filter(t => t.aazSlug !== slug);
+      s.textosProprios.push({ id: "teste1", titulo: "X", texto: "Uma frase curta para o teste correr.", nivel: 1, aazSlug: slug, perguntas: [] });
+    });
+    const z = document.createElement("div");
+    document.body.appendChild(z);
+    leitura.render(z, () => {});
+    const btnAaz = [...z.querySelectorAll("button")].find(b => /Hist.rias AaZ/.test(b.textContent));
+    btnAaz.click();
+    const cartao = z.querySelector(".missao");
+    cartao.click();
+    const temVideo = !!z.querySelector("iframe");
+    const temTexto = !!z.querySelector(".texto-leitura");
+    store.alterar(s => { s.textosProprios = s.textosProprios.filter(t => t.id !== "teste1"); });
+    z.remove();
+    return (temVideo && temTexto) || `vídeo:${temVideo} texto:${temTexto} — devia ter os dois`;
+  });
+
+  t("leitura: texto associado a AaZ não aparece duplicado na lista normal", () => {
+    const slug = aaz.HISTORIAS_AAZ[1].slug;
+    store.alterar(s => {
+      s.textosProprios.push({ id: "teste2", titulo: "Duplicado?", texto: "Frase.", nivel: store.obter().config.nivelLeitura, aazSlug: slug, perguntas: [] });
+    });
+    const z = document.createElement("div");
+    document.body.appendChild(z);
+    leitura.render(z, () => {});
+    const btnOutro = [...z.querySelectorAll("button")].find(b => /Escolher outro texto/.test(b.textContent));
+    btnOutro.click();
+    const aparece = [...z.querySelectorAll(".titulo")].some(t => t.textContent === "Duplicado?");
+    store.alterar(s => { s.textosProprios = s.textosProprios.filter(t => t.id !== "teste2"); });
+    z.remove();
+    return !aparece || "apareceu na lista de textos normais além da lista AaZ";
+  });
 
   t("audio: funções expostas", () => typeof audio.falar === "function" && typeof audio.podeGravar === "function");
 
