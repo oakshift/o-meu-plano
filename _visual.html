@@ -1,0 +1,56 @@
+<!DOCTYPE html><html lang="pt-PT"><head><meta charset="utf-8">
+<title>Vista</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+  body{background:#ddd6c8}
+  .moldura{max-width:430px;margin:0 auto 26px;background:var(--fundo);border-radius:22px;padding:14px;box-shadow:0 6px 20px rgba(0,0,0,.2)}
+  .etiq{max-width:430px;margin:0 auto;font:700 13px system-ui;color:#4a4437;padding:6px 4px;text-transform:uppercase;letter-spacing:.08em}
+  #app{max-width:none;padding:0}
+</style></head><body>
+<div id="app"></div>
+<script>
+// dados de exemplo, para os ecrãs não aparecerem vazios
+const hoje = new Date();
+const iso = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+const dia = n => { const d = new Date(); d.setDate(d.getDate()-n); return iso(d); };
+const cartoes = {};
+for (const [a,b] of [[2,3],[2,4],[2,5],[5,2],[5,3],[10,4],[3,3],[3,4],[4,4]]) cartoes[`m-${a}-${b}`] = {caixa:4,ultimaVez:dia(1),erros:0,acertos:5,tempos:[2.1]};
+for (let n=1;n<=9;n++) cartoes[`f10-${n}`] = {caixa:5,ultimaVez:dia(2),erros:0,acertos:6,tempos:[1.6]};
+for (const [t,b] of [[13,5],[14,6],[15,7],[16,8]]) cartoes[`b20-${t}-${b}`] = {caixa:1,ultimaVez:dia(1),erros:3,acertos:2,tempos:[9.2]};
+localStorage.setItem("plano.v1", JSON.stringify({
+  versao:1,
+  perfil:{nome:"Pedro", criadoEm:dia(40)},
+  config:{pin:"2468",minutosSemana:45,minutosFimDeSemana:75,nivelLeitura:2,letraGrande:false,espacamentoAmplo:false,missoes:{leitura:true,matematica:true,silabas:true},diaAvaliacao:6},
+  leitura:{
+    sessoes:[3,2,1,0].map((n,i)=>({data:dia(n),textoId:"t0"+(6+i),titulo:"Texto",fonte:"app",
+      tentativas:[{ppm:58+i*4,segundos:100,palavras:100},{ppm:66+i*4,segundos:92,palavras:100},{ppm:74+i*5,segundos:84,palavras:100}],
+      compreensao:{certas:2,total:3}})),
+    avaliacoes:[{data:dia(21),textoId:"t06",titulo:"O saque secreto",palavrasLidas:64,erros:7,segundos:60,ppmCorreto:57,precisao:89},
+                {data:dia(14),textoId:"t07",titulo:"Uma manhã na orquestra",palavrasLidas:70,erros:6,segundos:60,ppmCorreto:64,precisao:91},
+                {data:dia(7),textoId:"t08",titulo:"O polvo mais esperto",palavrasLidas:76,erros:5,segundos:60,ppmCorreto:71,precisao:93}]
+  },
+  math:{cartoes, sessoes:[3,2,1,0].map(n=>({data:dia(n),total:18,certas:15,tempoMedio:4.2}))},
+  silabas:{sessoes:[{data:dia(1),familia:"lh_nh_ch",total:8,certasRitmo:7}]},
+  tempo:{dias:Object.fromEntries([6,5,4,3,2,1,0].map(n=>[dia(n),{gastoSeg:[2700,1800,2400,900,2700,2100,1200][n],blocos:[{inicio:Date.now()-9e6,fim:Date.now()-8e6,planeadoSeg:1200,realSeg:1150}],blocoAtivo:null}]))},
+  textosProprios:[],
+  medalhas:[],
+  dias:Object.fromEntries([5,4,3,2,1,0].map(n=>[dia(n),{leitura:true,matematica:n%3!==0,silabas:n%2===0}]))
+}));
+</script>
+<script type="module">
+import * as casa from "./js/casa.js";
+import * as leitura from "./js/leitura.js";
+import * as matematica from "./js/matematica.js";
+import * as silabas from "./js/silabas.js";
+import * as tempo from "./js/tempo.js";
+import * as progresso from "./js/progresso.js";
+
+const app = document.getElementById("app");
+const ir = () => {};
+for (const [nome, mod] of [["Ecrã inicial", casa], ["Leitura", leitura], ["Matemática", matematica], ["Sílabas e ritmo", silabas], ["O meu tempo", tempo], ["Progresso", progresso]]) {
+  const etiq = document.createElement("div"); etiq.className = "etiq"; etiq.textContent = nome;
+  const m = document.createElement("div"); m.className = "moldura";
+  app.appendChild(etiq); app.appendChild(m);
+  try { mod.render(m, ir); } catch (e) { m.textContent = "ERRO: " + e.message; m.style.color = "red"; }
+}
+</script></body></html>

@@ -1,0 +1,199 @@
+<!DOCTYPE html><html lang="pt-PT"><head><meta charset="utf-8">
+<title>Testes</title>
+<style>
+body{font:15px/1.45 monospace;background:#111;color:#eee;margin:0;padding:14px}
+.ok{color:#5fdc7a}.mau{color:#ff6b6b;font-weight:700}
+h1{font:700 20px monospace;margin:0 0 10px}
+#res{white-space:pre-wrap}
+</style></head><body>
+<h1 id="tit">a correr…</h1><div id="res"></div>
+<script>
+window.onerror = (m, f, l) => {
+  document.getElementById("tit").innerHTML = '<span class="mau">ERRO GLOBAL</span>';
+  document.getElementById("res").textContent += `\n${m}\n  em ${f}:${l}\n`;
+  fetch("/resultado", { method: "POST", body: `ERRO GLOBAL: ${m}\n  em ${f}:${l}` });
+};
+window.addEventListener("unhandledrejection", e => {
+  document.getElementById("res").textContent += `\nPROMESSA REJEITADA: ${e.reason}\n`;
+  fetch("/resultado", { method: "POST", body: "PROMESSA REJEITADA: " + e.reason });
+});
+</script>
+<script type="module">
+const res = document.getElementById("res");
+let passou = 0, falhou = 0;
+function t(nome, fn) {
+  try {
+    const r = fn();
+    if (r === true || r === undefined) { passou++; res.innerHTML += `<span class="ok">✓</span> ${nome}\n`; }
+    else { falhou++; res.innerHTML += `<span class="mau">✗ ${nome} → ${r}</span>\n`; }
+  } catch (e) { falhou++; res.innerHTML += `<span class="mau">✗ ${nome} → ${e.message}</span>\n`; }
+}
+
+try {
+  const textos = await import("./data/textos.js");
+  const mat = await import("./data/matematica.js");
+  const pal = await import("./data/palavras.js");
+  const aaz = await import("./data/aaz.js");
+  const store = await import("./js/store.js");
+  const ui = await import("./js/ui.js");
+  const leitura = await import("./js/leitura.js");
+  const matm = await import("./js/matematica.js");
+  const sil = await import("./js/silabas.js");
+  const tempo = await import("./js/tempo.js");
+  const prog = await import("./js/progresso.js");
+  const pais = await import("./js/pais.js");
+  const audio = await import("./js/audio.js");
+  res.innerHTML += `<span class="ok">✓</span> todos os módulos carregaram\n\n`;
+
+  // ---- textos ----
+  t("textos: ids únicos", () => {
+    const ids = textos.TEXTOS.map(x => x.id);
+    return new Set(ids).size === ids.length || "ids repetidos";
+  });
+  t("textos: perguntas coerentes", () => {
+    for (const x of textos.TEXTOS) {
+      for (const q of (x.perguntas || [])) {
+        if (!Array.isArray(q.opcoes) || q.opcoes.length < 2) return `${x.id}: opções a menos`;
+        if (!(q.correta >= 0 && q.correta < q.opcoes.length)) return `${x.id}: índice correto inválido`;
+      }
+    }
+    return true;
+  });
+  t("textos: contagem de palavras > 0", () =>
+    textos.TEXTOS.every(x => textos.contarPalavras(x.texto) > 20) || "texto curto demais");
+  t("textos: 3 níveis preenchidos", () =>
+    [1,2,3].every(n => textos.TEXTOS.filter(x => x.nivel === n).length >= 5) || "nível pouco povoado");
+
+  // ---- matemática: a aritmética tem de bater certo ----
+  t("matemática: todas as respostas estão certas", () => {
+    for (const c of mat.COMPETENCIAS) {
+      for (const it of c.itens()) {
+        const p = it.pergunta;
+        let esperado = null;
+        let m;
+        if ((m = p.match(/^(\d+) \+ \? = (\d+)$/))) esperado = +m[2] - +m[1];
+        else if ((m = p.match(/^(\d+) \+ (\d+)$/))) esperado = +m[1] + +m[2];
+        else if ((m = p.match(/^(\d+) − (\d+)$/))) esperado = +m[1] - +m[2];
+        else if ((m = p.match(/^(\d+) × (\d+)$/))) esperado = +m[1] * +m[2];
+        else if ((m = p.match(/^(\d+) : (\d+)$/))) esperado = +m[1] / +m[2];
+        else if ((m = p.match(/^dobro de (\d+)$/))) esperado = +m[1] * 2;
+        else if ((m = p.match(/^metade de (\d+)$/))) esperado = +m[1] / 2;
+        else return `padrão não reconhecido: "${p}"`;
+        if (esperado !== it.resposta) return `"${p}" devia dar ${esperado}, está ${it.resposta}`;
+      }
+    }
+    return true;
+  });
+  t("matemática: ids de item únicos por competência", () => {
+    for (const c of mat.COMPETENCIAS) {
+      const ids = c.itens().map(i => i.id);
+      if (new Set(ids).size !== ids.length) return `${c.id} tem ids repetidos`;
+    }
+    return true;
+  });
+  t("matemática: todas as competências geram itens", () =>
+    mat.COMPETENCIAS.every(c => c.itens().length >= 9) || "competência com poucos itens");
+  t("matemática: problemas com resposta numérica", () =>
+    mat.PROBLEMAS.every(p => Number.isFinite(p.resposta) && p.texto.length > 30) || "problema mal formado");
+  t("matemática: ordem sem saltos", () => {
+    const o = mat.COMPETENCIAS.map(c => c.ordem).sort((a,b)=>a-b);
+    return o.every((v,i) => v === i+1) || "ordens: " + o.join(",");
+  });
+
+  // ---- sílabas: juntar as sílabas tem de dar a palavra ----
+  t("sílabas: divisão bate certo com a palavra", () => {
+    for (const f of pal.FAMILIAS) {
+      for (const p of f.palavras) {
+        if (p.s.join("") !== p.p) return `${f.id}: "${p.s.join("-")}" ≠ "${p.p}"`;
+      }
+    }
+    return true;
+  });
+  t("sílabas: sem palavras repetidas dentro da família", () => {
+    for (const f of pal.FAMILIAS) {
+      const ps = f.palavras.map(x => x.p);
+      if (new Set(ps).size !== ps.length) return `${f.id} repete palavras`;
+    }
+    return true;
+  });
+
+  // ---- aaz ----
+  t("aaz: 24 histórias com url e contagem", () =>
+    aaz.HISTORIAS_AAZ.length === 24 &&
+    aaz.HISTORIAS_AAZ.every(h => h.url.startsWith("https://") && h.palavras > 0) || "catálogo incompleto");
+  t("aaz: nenhum texto copiado", () =>
+    aaz.HISTORIAS_AAZ.every(h => !("texto" in h)) || "há texto copiado no catálogo");
+
+  // ---- store ----
+  t("store: grava e lê", () => {
+    store.alterar(s => { s.perfil.nome = "Teste"; });
+    store.guardarJa();
+    return store.obter().perfil.nome === "Teste" || "não guardou";
+  });
+  t("store: hojeISO no formato certo", () => /^\d{4}-\d{2}-\d{2}$/.test(store.hojeISO()) || store.hojeISO());
+  t("store: ultimosDias(7) devolve 7", () => store.ultimosDias(7).length === 7);
+  t("store: missões e marcação do dia", () => {
+    store.marcarMissao("leitura");
+    return store.diaAtual().leitura === true || "não marcou";
+  });
+
+  // ---- leitura ----
+  t("leitura: ppm calcula certo", () => {
+    if (leitura.ppm(100, 60) !== 100) return "100 palavras em 60s ≠ 100";
+    if (leitura.ppm(50, 30) !== 100) return "50 em 30s ≠ 100";
+    if (leitura.ppm(10, 0) !== 0) return "divisão por zero";
+    return true;
+  });
+
+  // ---- motor de repetição espaçada ----
+  t("matemática: competências desbloqueiam por ordem", () => {
+    const a = matm.competenciasDesbloqueadas();
+    return a.length >= 1 && a[0].ordem === 1 || "primeira competência errada";
+  });
+  t("matemática: progresso não rebenta sem dados", () => {
+    const p = matm.progressoCompetencia(mat.COMPETENCIAS[0]);
+    return p.total > 0 && p.percentagem >= 0 || "progresso inválido";
+  });
+
+  // ---- tempo ----
+  t("tempo: orçamento do dia é positivo", () => tempo.orcamentoDeHojeSeg() > 0);
+  t("tempo: restante nunca é negativo", () => tempo.restanteHojeSeg() >= 0);
+
+  // ---- medalhas ----
+  t("progresso: medalhas calculam", () => {
+    const m = prog.medalhasGanhas();
+    return m.length > 5 && m.every(x => typeof x.ganha === "boolean") || "medalhas inválidas";
+  });
+
+  // ---- ui ----
+  t("ui: mmss formata", () => ui.mmss(65) === "1:05" || ui.mmss(65));
+  t("ui: minutosBonitos formata", () => ui.minutosBonitos(2700) === "45 min" || ui.minutosBonitos(2700));
+  t("ui: el cria elementos com filhos", () => {
+    const n = ui.el("div", { class: "x" }, [ui.el("span", { texto: "oi" })]);
+    return n.className === "x" && n.textContent === "oi";
+  });
+
+  // ---- render de cada ecrã, sem rebentar ----
+  const alvo = document.createElement("div");
+  for (const [nome, mod] of [["leitura", leitura], ["matemática", matm], ["sílabas", sil], ["tempo", tempo], ["progresso", prog], ["pais", pais]]) {
+    t(`ecrã ${nome}: desenha sem erro`, () => {
+      alvo.innerHTML = "";
+      const limpar = mod.render(alvo, () => {});
+      if (typeof limpar === "function") limpar();
+      return alvo.children.length > 0 || "não desenhou nada";
+    });
+  }
+
+  t("audio: funções expostas", () => typeof audio.falar === "function" && typeof audio.podeGravar === "function");
+
+} catch (e) {
+  falhou++;
+  res.innerHTML += `<span class="mau">✗ FALHA AO CARREGAR: ${e.message}\n${e.stack}</span>\n`;
+}
+
+const cabeca = falhou === 0
+  ? `TODOS OS ${passou} TESTES PASSARAM`
+  : `${falhou} FALHAS · ${passou} passaram`;
+document.getElementById("tit").textContent = cabeca;
+fetch("/resultado", { method: "POST", body: cabeca + "\n\n" + res.textContent });
+</script></body></html>
