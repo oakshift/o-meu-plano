@@ -71,6 +71,11 @@ if (!obter().perfil.criadoEm) boasVindas();
 else ir("casa");
 
 if ("serviceWorker" in navigator) {
+  // Quando sai uma versão nova, o browser ainda abre a antiga (a da cache) e
+  // só depois instala a nova. Recarregar nessa altura evita que ele fique com
+  // a antiga até fechar e voltar a abrir. Na primeira instalação não há antiga.
+  const tinhaVersao = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener("controllerchange", () => { if (tinhaVersao) location.reload(); });
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("sw.js").catch(() => { /* offline é um extra, não um requisito */ });
   });
