@@ -169,7 +169,7 @@ export function render(raiz, ir) {
       limpar(raiz);
       raiz.appendChild(cabecalho(texto.titulo, "Primeiro ouve. Segue com os olhos, sem ler em voz alta.", config.voltar || menu));
 
-      // Com vídeo, o modelo é um leitor a sério — melhor do que a voz do iPad.
+      // Com vídeo, o modelo é um leitor a sério — melhor do que a voz sintética.
       if (config.video) raiz.appendChild(caixaVideo(config.video, texto.titulo));
 
       const corpo = el("div", { class: "painel" }, [el("p", { class: "texto-leitura", texto: texto.texto })]);

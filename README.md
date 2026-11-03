@@ -4,8 +4,9 @@ Treino diário de leitura e de matemática para uma criança do 3.º ano, com o
 tempo de ecrã gerido pela própria.
 
 Página web sem servidor, sem contas e sem recolha de dados: tudo o que a app
-guarda fica no dispositivo onde é usada. Feita para correr no Safari de um
-iPad, adicionada ao ecrã principal como app.
+guarda fica no dispositivo onde é usada. Começou por ser feita para o iPad;
+hoje é usada num computador, no Firefox ou no Brave, com ecrã tátil, rato
+e teclado — e continua a funcionar em tablets.
 
 **→ [Guia para os pais](GUIA.md)** — o método, a rotina e como interpretar
 os números. É o documento a ler primeiro.
@@ -32,9 +33,11 @@ ler passar a valer desenhos animados, ensina-se que ler é o trabalho e os
 bonecos são o pagamento — e o hábito morre com a recompensa. O treino
 desbloqueia níveis, medalhas e recordes, não tempo.
 
-**A app não bloqueia nada.** Uma página web no iPad não consegue impedir o
-YouTube de abrir; quem corta é o Tempo de Ecrã do iOS. A app dá a decisão, a
-hora de regresso e o registo. O iOS é a cerca, a app é o volante.
+**A app não bloqueia nada.** Uma página web não consegue impedir o YouTube
+de abrir; quem corta é o controlo parental do computador (Family Safety no
+Windows, Tempo de Ecrã no Mac, Family Link no Chromebook). A app dá a
+decisão, a hora de regresso e o registo. O sistema é a cerca, a app é o
+volante.
 
 ## Conteúdos
 
@@ -66,7 +69,7 @@ js/  app.js         router
      audio.js       voz (pt-PT) e gravação
      leitura.js  matematica.js  silabas.js  tempo.js  progresso.js  pais.js
 data/ textos.js  matematica.js  palavras.js  aaz.js
-_teste.html         38 testes — abrir num servidor local
+_teste.html         40 testes — abrir num servidor local
 ```
 
 Sem dependências, sem build, sem passo de compilação. JavaScript com módulos
@@ -86,12 +89,12 @@ partir de `file://`.)
 
 Já está publicado por GitHub Pages a partir do ramo `main`. Qualquer alteração
 enviada para o repositório fica online em cerca de um minuto. Depois de
-alterar ficheiros, subir o número da versão em `sw.js` para que os iPads
+alterar ficheiros, subir o número da versão em `sw.js` para que os browsers
 recebam a versão nova em vez da que têm em cache.
 
 ## Privacidade
 
 Não há servidor, contas nem análise de utilização. Progresso, definições,
 textos próprios e gravações ficam no armazenamento local do dispositivo e
-nunca saem dele. O reverso da medalha: apagar os dados do Safari apaga tudo.
+nunca saem dele. O reverso da medalha: apagar os dados do browser apaga tudo.
 Há exportação para ficheiro no painel dos pais.

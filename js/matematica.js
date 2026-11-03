@@ -11,7 +11,7 @@
 
 import { COMPETENCIAS, PROBLEMAS, competenciaPorId } from "../data/matematica.js";
 import { obter, alterar, hojeISO, marcarMissao } from "./store.js";
-import { el, limpar, som, vibrar, cabecalho, baralhar, escolher } from "./ui.js";
+import { el, limpar, som, vibrar, cabecalho, baralhar, escolher, temTeclado } from "./ui.js";
 import * as audio from "./audio.js";
 
 const ITENS_POR_SESSAO = 18;
@@ -106,9 +106,43 @@ function registar(item, acertou, segundos) {
 
 export function render(raiz, ir) {
   let limpeza = null;
+  // No computador as respostas também entram pelo teclado. Cada conta põe
+  // aqui o que as teclas fazem; ao sair do ecrã o ouvinte é retirado.
+  let aoTeclar = null;
+  const ouvirTeclado = e => { if (aoTeclar && !e.ctrlKey && !e.metaKey && !e.altKey) aoTeclar(e); };
+  document.addEventListener("keydown", ouvirTeclado);
+
+  // Teclado no ecrã e teclado do computador ligados às mesmas três ações.
+  function tecladoNumerico(escrever, apagar, validar) {
+    aoTeclar = e => {
+      if (/^[0-9]$/.test(e.key)) escrever(e.key);
+      else if (e.key === "Backspace") apagar();
+      else if (e.key === "Enter") validar();
+      else return;
+      e.preventDefault();
+    };
+    // Sem o mousedown, o botão clicado ficava com o foco e o Enter seguinte
+    // carregava nele outra vez.
+    const tecla = (texto, fn, classe = "tecla") =>
+      el("button", { class: classe, onMousedown: e => e.preventDefault(), onClick: fn }, texto);
+    const grelha = el("div", { class: "teclado" });
+    for (const t of ["1", "2", "3", "4", "5", "6", "7", "8", "9"]) grelha.appendChild(tecla(t, () => escrever(t)));
+    grelha.appendChild(tecla("←", apagar));
+    grelha.appendChild(tecla("0", () => escrever("0")));
+    grelha.appendChild(tecla("✓", validar, "tecla acao"));
+    return el("div", {}, [
+      grelha,
+      temTeclado() ? el("p", { class: "ajuda centrado", texto: "Podes escrever com as teclas dos números e carregar em Enter." }) : null
+    ]);
+  }
+
+  function continuarComEnter(fn) {
+    aoTeclar = e => { if (e.key === "Enter") { e.preventDefault(); fn(); } };
+  }
 
   function inicio() {
     if (limpeza) { limpeza(); limpeza = null; }
+    aoTeclar = null;
     limpar(raiz);
     raiz.appendChild(cabecalho("Matemática", "Cinco minutos de contas de cabeça. Rápido é melhor do que perfeito.", () => ir("casa")));
 
@@ -190,21 +224,19 @@ export function render(raiz, ir) {
             el("button", { class: "btn btn-grande btn-principal", style: "margin-top:12px", onClick: () => { indice++; proxima(); } }, "Continuar")
           ]);
           zona.appendChild(certo);
+          continuarComEnter(() => { indice++; proxima(); });
           [...teclado.querySelectorAll("button")].forEach(b => b.disabled = true);
         }
       }
 
-      const teclado = el("div", { class: "teclado" });
-      for (const t of ["1", "2", "3", "4", "5", "6", "7", "8", "9"]) {
-        teclado.appendChild(el("button", { class: "tecla", onClick: () => { if (!bloqueado && resposta.length < 4) { resposta += t; mostrar(); } } }, t));
-      }
-      teclado.appendChild(el("button", { class: "tecla", onClick: () => { if (!bloqueado) { resposta = resposta.slice(0, -1); mostrar(); } } }, "←"));
-      teclado.appendChild(el("button", { class: "tecla", onClick: () => { if (!bloqueado && resposta.length < 4) { resposta += "0"; mostrar(); } } }, "0"));
-      teclado.appendChild(el("button", { class: "tecla acao", onClick: validar }, "✓"));
+      const escrever = t => { if (!bloqueado && resposta.length < 4) { resposta += t; mostrar(); } };
+      const apagar = () => { if (!bloqueado) { resposta = resposta.slice(0, -1); mostrar(); } };
+      const teclado = tecladoNumerico(escrever, apagar, validar);
       zona.appendChild(teclado);
     }
 
     function fim() {
+      aoTeclar = null;
       marcarMissao("matematica");
       const medio = tempos.reduce((a, b) => a + b, 0) / (tempos.length || 1);
       alterar(s => {
@@ -266,21 +298,19 @@ export function render(raiz, ir) {
             el("div", { class: "numero-medio", texto: String(p.resposta) }),
             el("button", { class: "btn btn-grande btn-principal", style: "margin-top:12px", onClick: () => { indice++; proximo(); } }, "Continuar")
           ]));
+          continuarComEnter(() => { indice++; proximo(); });
           [...teclado.querySelectorAll("button")].forEach(b => b.disabled = true);
         }
       }
 
-      const teclado = el("div", { class: "teclado" });
-      for (const t of ["1", "2", "3", "4", "5", "6", "7", "8", "9"]) {
-        teclado.appendChild(el("button", { class: "tecla", onClick: () => { if (!bloqueado && resposta.length < 4) { resposta += t; mostrar(); } } }, t));
-      }
-      teclado.appendChild(el("button", { class: "tecla", onClick: () => { if (!bloqueado) { resposta = resposta.slice(0, -1); mostrar(); } } }, "←"));
-      teclado.appendChild(el("button", { class: "tecla", onClick: () => { if (!bloqueado && resposta.length < 4) { resposta += "0"; mostrar(); } } }, "0"));
-      teclado.appendChild(el("button", { class: "tecla acao", onClick: validar }, "✓"));
+      const escrever = t => { if (!bloqueado && resposta.length < 4) { resposta += t; mostrar(); } };
+      const apagar = () => { if (!bloqueado) { resposta = resposta.slice(0, -1); mostrar(); } };
+      const teclado = tecladoNumerico(escrever, apagar, validar);
       zona.appendChild(teclado);
     }
 
     function fim() {
+      aoTeclar = null;
       som("fim");
       audio.pararDeFalar();
       limpar(raiz);
@@ -296,7 +326,7 @@ export function render(raiz, ir) {
   }
 
   inicio();
-  return () => { if (limpeza) limpeza(); };
+  return () => { if (limpeza) limpeza(); document.removeEventListener("keydown", ouvirTeclado); };
 }
 
 export { COMPETENCIAS, competenciaPorId };

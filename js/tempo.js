@@ -4,8 +4,8 @@
 // definido pelos pais, que ele gere sozinho. O que o treino desbloqueia são
 // outras coisas (níveis, medalhas). Assim a leitura não vira moeda de troca.
 //
-// A app não bloqueia nada — o Safari não consegue. Quem corta é o Tempo de
-// Ecrã do iOS. O que a app faz é dar-lhe a decisão e a hora de regresso:
+// A app não bloqueia nada — uma página web não consegue. Quem corta é o
+// controlo parental do computador. O que a app faz é dar-lhe a decisão e a hora de regresso:
 // "acaba às 17:35" funciona melhor com uma criança do que um alarme que ela
 // não vai ouvir por estar noutra aplicação.
 

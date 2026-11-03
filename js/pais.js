@@ -52,7 +52,7 @@ export function render(raiz, ir) {
     const opcoes = [
       ["📏", "Avaliação da semana", "Medir palavras corretas por minuto", avaliacao],
       ["📈", "Relatório detalhado", "Leitura, matemática e tempo de ecrã", relatorio],
-      ["🎧", "Ouvir as gravações", "As leituras dele, guardadas no iPad", gravacoes],
+      ["🎧", "Ouvir as gravações", "As leituras dele, guardadas neste computador", gravacoes],
       ["✏️", "Textos", "Acrescentar textos vossos", textos],
       ["⚙️", "Definições", "Tempo de ecrã, nível, missões, PIN", definicoes]
     ];
@@ -344,7 +344,7 @@ export function render(raiz, ir) {
         el("div", { class: "val", style: `height:${Math.round((g / topoT) * 100)}%;background:var(--tempo)` }),
         el("div", { class: "dia", texto: String(g) })
       ]))),
-      el("p", { class: "ajuda" }, "Só conta o que ele marcou na app. O corte real tem de vir do Tempo de Ecrã do iOS.")
+      el("p", { class: "ajuda" }, "Só conta o que ele marcou na app. O corte real tem de vir do controlo parental do computador.")
     ]));
 
     raiz.appendChild(el("button", { class: "btn btn-grande", onClick: exportar }, "Exportar tudo (cópia de segurança)"));
@@ -355,7 +355,7 @@ export function render(raiz, ir) {
   function gravacoes() {
     trocar(null);
     limpar(raiz);
-    raiz.appendChild(cabecalho("Gravações", "As últimas 12 leituras dele. Ficam só neste iPad.", menu));
+    raiz.appendChild(cabecalho("Gravações", "As últimas 12 leituras dele. Ficam só neste computador.", menu));
     const zona = el("div");
     raiz.appendChild(zona);
     audio.listarGravacoes().then(lista => {
@@ -384,7 +384,7 @@ export function render(raiz, ir) {
   function textos() {
     trocar(null);
     limpar(raiz);
-    raiz.appendChild(cabecalho("Textos", "Acrescente textos vossos. Ficam guardados só neste iPad.", menu));
+    raiz.appendChild(cabecalho("Textos", "Acrescente textos vossos. Ficam guardados só neste computador.", menu));
 
     const titulo = el("input", { type: "text", placeholder: "Título" });
     const corpo = el("textarea", { placeholder: "Cole aqui o texto…" });
@@ -527,7 +527,7 @@ export function render(raiz, ir) {
 
     raiz.appendChild(el("div", { class: "painel plano", style: "margin-top:20px" }, [
       el("div", { class: "rotulo", texto: "Dados" }),
-      el("p", { class: "ajuda", style: "margin-top:8px" }, "Tudo o que a app guarda está neste iPad. Nada é enviado para lado nenhum."),
+      el("p", { class: "ajuda", style: "margin-top:8px" }, "Tudo o que a app guarda está neste computador, neste browser. Nada é enviado para lado nenhum."),
       el("div", { class: "linha-botoes", style: "margin-top:10px" }, [
         el("button", { class: "btn", onClick: exportar }, "Exportar"),
         el("button", { class: "btn", onClick: importar }, "Importar"),

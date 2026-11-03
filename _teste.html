@@ -249,6 +249,43 @@ try {
     return !aparece || "apareceu na lista de textos normais além da lista AaZ";
   });
 
+  const tecla = (key, alvo = document) => alvo.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true }));
+
+  t("matemática: responde-se com o teclado do computador", () => {
+    const z = document.createElement("div");
+    document.body.appendChild(z);
+    const sair = matm.render(z, () => {});
+    [...z.querySelectorAll("button")].find(b => b.textContent === "Começar").click();
+    const pergunta = z.querySelector(".conta").textContent;
+    const caixa = z.querySelector(".resposta-caixa");
+    tecla("9"); tecla("8"); tecla("Backspace"); tecla("7");
+    const escrito = caixa.textContent;
+    tecla("Enter");
+    const avaliada = caixa.classList.contains("certa") || caixa.classList.contains("errada");
+    const continuar = [...z.querySelectorAll("button")].find(b => b.textContent === "Continuar");
+    if (continuar) tecla("Enter");
+    const avancou = !continuar || z.querySelector(".resposta-caixa").textContent === "?";
+    sair();
+    tecla("5"); // depois de sair, as teclas não fazem nada
+    const calado = !continuar || z.querySelector(".resposta-caixa").textContent === "?";
+    z.remove();
+    return (escrito === "97" && avaliada && avancou && calado) || `escrito=${escrito} avaliada=${avaliada} avançou=${avancou} calado=${calado} (${pergunta})`;
+  });
+
+  t("sílabas: a barra de espaço bate", () => {
+    const z = document.createElement("div");
+    document.body.appendChild(z);
+    const sair = sil.render(z, () => {});
+    [...z.querySelectorAll("button")].find(b => b.textContent === "Começar").click();
+    tecla(" "); tecla(" ");
+    const contagem = z.querySelector(".numero-medio").textContent;
+    sair();
+    tecla(" ");
+    const depois = z.querySelector(".numero-medio").textContent;
+    z.remove();
+    return (contagem === "2" && depois === "2") || `contagem=${contagem} depois de sair=${depois}`;
+  });
+
   t("audio: funções expostas", () => typeof audio.falar === "function" && typeof audio.podeGravar === "function");
 
 } catch (e) {

@@ -15,19 +15,26 @@ minutos de bonecos — nunca. Uma vez por semana medem a leitura a sério.
 
 ## O que a app não faz
 
-**Não bloqueia nada.** Uma página web no iPad não consegue impedir o
-YouTube ou a Netflix de abrir. Quem corta é o **Tempo de Ecrã do iOS**.
+**Não bloqueia nada.** Uma página web não consegue impedir o YouTube ou a
+Netflix de abrir. Quem corta é o **controlo parental do computador**.
 
-Configurem isso primeiro, senão o resto não se aguenta:
+Configurem isso primeiro, senão o resto não se aguenta. Ele tem de ter uma
+conta de utilizador **só dele** no computador, sem ser administrador, e o
+limite diário põe-se nessa conta:
 
-`Definições → Tempo de Ecrã → Limites de Apps → Adicionar Limite`
-→ escolher *Entretenimento* (ou as apps específicas) → definir o mesmo
-número de minutos que puseram na app → ativar **Bloquear no Limite** e pôr
-um código que ele não saiba.
+- **Windows:** Microsoft Family Safety (`Definições → Contas → Família`) →
+  *Tempo de ecrã* → limite diário para o computador, ou por app/site.
+- **Mac:** `Definições do Sistema → Tempo de Ecrã`, na conta dele → *Limites
+  de apps* → ativar **Bloquear no limite** e pôr um código que ele não saiba.
+- **Chromebook:** Google Family Link → *Limites diários*.
+- **Linux:** o programa Timekpr-nEXT faz o mesmo para a conta dele.
 
-A partir daí a divisão de trabalho é clara: **o iOS é a cerca, a app é o
-volante.** O iPad diz "acabou"; a app é onde ele decide quando gastar, vê
-quanto lhe resta e aprende a antecipar. Deixam de ser vocês a dizer "pára".
+Ponham o mesmo número de minutos que puseram na app.
+
+A partir daí a divisão de trabalho é clara: **o computador é a cerca, a app
+é o volante.** O computador diz "acabou"; a app é onde ele decide quando
+gastar, vê quanto lhe resta e aprende a antecipar. Deixam de ser vocês a
+dizer "pára".
 
 ---
 
@@ -77,8 +84,8 @@ e a terceira leitura, e ele vê isso acontecer em cinco minutos.
 O ponto não é a nota: é ele bater-se a si próprio, hoje, à frente dos
 próprios olhos.
 
-O iPad grava-o a ler. As gravações ficam no painel dos pais (últimas 12,
-guardadas só no iPad). Ouçam de vez em quando — dá para perceber muito
+O computador grava-o a ler. As gravações ficam no painel dos pais (últimas
+12, guardadas só neste computador). Ouçam de vez em quando — dá para perceber muito
 mais do que por um número.
 
 ### Matemática — factos numéricos
@@ -101,7 +108,8 @@ Duas coisas a saber:
 
 ### Sílabas e ritmo
 
-Bate as sílabas com o dedo, depois lê a palavra. Trabalha os padrões que
+Bate as sílabas com o dedo no ecrã ou na barra de espaço, depois lê a
+palavra. Trabalha os padrões que
 fazem tropeçar em português (lh/nh/ch, br/cr/pr, ão/ãe/õe, r travado).
 
 A entrada é rítmica de propósito. Numa casa onde há música, a consciência
@@ -118,7 +126,7 @@ Escolham um texto que ele **não** tenha treinado, sentem-se ao lado dele e
 carreguem em Começar. Durante um minuto:
 
 - ele lê em voz alta;
-- vocês tocam em cada palavra que ele leia mal, troque ou salte;
+- vocês tocam (ou clicam) em cada palavra que ele leia mal, troque ou salte;
 - ao fim do minuto, tocam na última palavra que ele leu.
 
 A app calcula **palavras corretas por minuto**. É o procedimento habitual
@@ -152,21 +160,57 @@ leitura. E se estiver a subir, também vale a pena saber.
 
 ## Coisas práticas
 
-**Instalar no iPad:** abrir o endereço no Safari → botão Partilhar →
-*Adicionar ao Ecrã Principal*. Fica com ícone próprio e abre sem barra de
-browser. Funciona sem internet depois da primeira abertura.
+**Que browser usar:** escolham **um** — Firefox ou Brave, ambos servem — e
+usem sempre esse. Os dados ficam guardados dentro do browser: o que ele
+fizer no Firefox não aparece no Brave, e vice-versa. Na dúvida, o Firefox,
+que é onde os testes da app correm.
 
-**Microfone:** o Safari pede autorização na primeira gravação. Sem
-autorização a app funciona na mesma, apenas não grava.
+Antes de escolher, abram uma missão de leitura em cada um e carreguem em
+ouvir o texto: a voz que lê em voz alta vem do computador e muda de browser
+para browser. Fiquem com o que tiver a voz portuguesa mais clara. Nas
+Histórias AaZ isto não conta, porque quem lê é o vídeo.
 
-**Os dados** ficam todos no iPad. Não há contas, não há servidor, nada sai
-do dispositivo. Isso tem uma consequência: **se apagarem o Safari ou o
-iPad, perde-se tudo.** Exportem de vez em quando (Definições → Exportar).
+**Não deixem o browser apagar os dados ao fechar**, senão perde-se o
+progresso todos os dias:
+
+- **Firefox:** `Definições → Privacidade e segurança` → a opção *Eliminar
+  cookies e dados de sites quando o Firefox é fechado* tem de estar
+  desligada.
+- **Brave:** em `Definições → Privacidade e segurança`, na parte dos cookies
+  e dados de sites, a opção de apagar tudo ao fechar as janelas tem de estar
+  desligada. Se o vídeo de uma história AaZ não aparecer, carreguem
+  no leão do Brave e baixem os Escudos para este site.
+
+**Abrir com um clique:** no Brave, com a app aberta, procurem no menu `☰` a
+opção de instalar a página como aplicação — fica com ícone próprio e abre numa janela sem
+barra de browser. No Firefox não há essa opção: ponham um marcador na barra
+de marcadores. Em ambos funciona sem internet depois da primeira abertura.
+
+**Dedo, rato ou teclado:** o ecrã tátil funciona como no iPad — ele pode
+tocar em tudo. Na matemática também pode escrever as respostas com as
+teclas dos números e carregar em Enter; experimentem as duas maneiras e
+deixem-no ficar com a que for mais rápida, porque a velocidade conta. Nas
+sílabas, o tambor é o botão grande no ecrã ou a barra de espaço.
+
+**Microfone:** o browser pede autorização na primeira gravação. Sem
+microfone ou sem autorização a app funciona na mesma, apenas não grava. Num
+portátil o microfone já vem incluído; num computador de secretária pode ser
+preciso uns auscultadores com microfone.
+
+**Os dados** ficam todos neste computador, dentro do browser. Não há
+contas, não há servidor, nada sai do dispositivo. Isso tem uma
+consequência: **se limparem os dados do browser, perde-se tudo.** Exportem
+de vez em quando (Definições → Exportar).
+
+**Vindo do iPad:** o progresso do iPad não passa sozinho para o computador.
+Se o iPad ainda existir, abram lá a app → Definições → *Exportar*, passem o
+ficheiro para o computador e lá usem *Importar*. Se o iPad já não estiver
+disponível, começa-se do zero — os níveis voltam a subir depressa.
 
 **PIN inicial: 2468.** Mudem-no nas Definições, senão ele descobre.
 
 **Textos vossos:** Painel dos pais → Textos. Colam o texto e ele entra na
-rotação no dia seguinte. Para uso familiar no iPad podem usar o que
+rotação no dia seguinte. Para uso familiar podem usar o que
 quiserem; só não vale a pena publicar textos protegidos no repositório.
 
 **Histórias AaZ:** 24 histórias de autores portugueses da Iniciativa
@@ -178,5 +222,5 @@ não podem ser copiadas para um repositório público. Mas há uma saída, e val
 a pena usá-la: em *Textos*, o primeiro campo pergunta se aquilo é uma
 história AaZ. Se colarem lá o texto e escolherem a história, ela passa a
 funcionar como qualquer outra — vídeo em cima, texto por baixo, três
-leituras, sem sair da app. Esse texto fica guardado só no iPad e nunca é
-publicado, o que é uso familiar e legítimo.
+leituras, sem sair da app. Esse texto fica guardado só neste computador e
+nunca é publicado, o que é uso familiar e legítimo.

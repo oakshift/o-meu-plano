@@ -20,6 +20,7 @@
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+button, a, .palavra { touch-action: manipulation; }
 
 html, body {
   margin: 0;
@@ -250,6 +251,12 @@ th { color: var(--texto-suave); font-weight: 700; font-size: 13px; text-transfor
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
 }
+
+/* ---------- rato e teclado ---------- */
+@media (hover: hover) {
+  .btn:hover:not(:disabled), .tecla:hover:not(:disabled), .missao:hover, .batida:hover { filter: brightness(.96); }
+}
+:focus-visible { outline: 3px solid var(--leitura); outline-offset: 2px; }
 
 /* ---------- ecrãs largos ---------- */
 @media (min-width: 700px) {

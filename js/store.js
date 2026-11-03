@@ -1,4 +1,4 @@
-// Estado da aplicação. Tudo vive no localStorage do próprio iPad:
+// Estado da aplicação. Tudo vive no localStorage do próprio browser:
 // nada é enviado para lado nenhum, não há contas nem servidor.
 
 const CHAVE = "plano.v1";
@@ -54,7 +54,7 @@ function carregar() {
 
 let guardarPendente = null;
 export function guardar() {
-  // Agrupa escritas seguidas numa só — o localStorage do Safari é lento.
+  // Agrupa escritas seguidas numa só — o localStorage pode ser lento (no Safari é).
   if (guardarPendente) clearTimeout(guardarPendente);
   guardarPendente = setTimeout(() => {
     try {

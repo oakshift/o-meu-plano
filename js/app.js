@@ -61,7 +61,7 @@ function boasVindas() {
 audio.prepararVozes();
 pais.aplicarPreferencias();
 
-// O iPad suspende a página quando ele sai para ver bonecos: ao voltar,
+// Quando ele sai para ver bonecos, a página fica escondida ou suspensa: ao voltar,
 // redesenha para os números do tempo ficarem certos.
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden && ecraAtual === "casa") ir("casa");

@@ -9,7 +9,7 @@
 
 import { FAMILIAS } from "../data/palavras.js";
 import { obter, alterar, hojeISO, marcarMissao } from "./store.js";
-import { el, limpar, som, vibrar, cabecalho, baralhar } from "./ui.js";
+import { el, limpar, som, vibrar, cabecalho, baralhar, temTeclado, temToque } from "./ui.js";
 import * as audio from "./audio.js";
 
 const PALAVRAS_POR_SESSAO = 8;
@@ -27,11 +27,19 @@ function sugerirFamilia() {
 export function render(raiz, ir) {
   let temporizador = null;
   const parar = () => { if (temporizador) { clearTimeout(temporizador); temporizador = null; } audio.pararDeFalar(); };
+  // No computador o tambor é a barra de espaço.
+  let aoTeclar = null;
+  const ouvirTeclado = e => { if (aoTeclar) aoTeclar(e); };
+  document.addEventListener("keydown", ouvirTeclado);
 
   function inicio() {
     parar();
+    aoTeclar = null;
     limpar(raiz);
-    raiz.appendChild(cabecalho("Sílabas e ritmo", "Bate as sílabas com o dedo, como se fosse um tambor. Depois lê a palavra.", () => ir("casa")));
+    const comoBater = !temTeclado() ? "Bate as sílabas com o dedo, como se fosse um tambor."
+      : temToque() ? "Bate as sílabas com o dedo ou na barra de espaço, como se fosse um tambor."
+      : "Bate as sílabas na barra de espaço, como se fosse um tambor.";
+    raiz.appendChild(cabecalho("Sílabas e ritmo", `${comoBater} Depois lê a palavra.`, () => ir("casa")));
 
     const sugerida = sugerirFamilia();
     raiz.appendChild(el("div", { class: "painel" }, [
@@ -46,6 +54,7 @@ export function render(raiz, ir) {
 
   function escolher() {
     parar();
+    aoTeclar = null;
     limpar(raiz);
     raiz.appendChild(cabecalho("Escolhe um grupo", null, inicio));
     const grelha = el("div", { class: "missoes" });
@@ -79,7 +88,7 @@ export function render(raiz, ir) {
 
       limpar(zona);
       const contador = el("div", { class: "numero-medio centrado", texto: "0", style: "margin-top:8px" });
-      const botao = el("button", { class: "batida" }, "Bate uma vez por sílaba");
+      const botao = el("button", { class: "batida" }, temTeclado() ? "Bate uma vez por sílaba — aqui ou no espaço" : "Bate uma vez por sílaba");
       zona.appendChild(el("div", { class: "painel" }, [
         el("div", { class: "rotulo centrado", texto: `${indice + 1} de ${palavras.length}` }),
         el("div", { class: "palavra-grande", texto: alvo.p }),
@@ -95,8 +104,16 @@ export function render(raiz, ir) {
         if (temporizador) clearTimeout(temporizador);
         temporizador = setTimeout(() => verificar(batidas), 1400);
       });
+      // Se o botão tiver o foco (depois de um clique), o próprio browser já
+      // transforma o espaço num clique — não contar duas vezes.
+      aoTeclar = e => {
+        if (e.key !== " " || e.target === botao) return;
+        e.preventDefault();
+        if (!e.repeat) botao.click();
+      };
 
       function verificar(n) {
+        aoTeclar = null;
         const certo = n === alvo.s.length;
         if (certo) { certasRitmo++; som("certo"); } else { som("errado"); }
         mostrarSilabas(certo, n);
@@ -135,11 +152,14 @@ export function render(raiz, ir) {
           audio.temVoz() ? el("button", { class: "btn", onClick: () => { parar(); audio.falar(alvo.p, { velocidade: 0.8 }); } }, "🔊  Ouvir") : null,
           el("button", { class: "btn btn-grande btn-silabas", onClick: () => { indice++; proxima(); } }, "Já li — seguinte")
         ]));
+        // Só o Enter avança: o espaço podia ser uma batida a mais.
+        aoTeclar = e => { if (e.key === "Enter") { e.preventDefault(); indice++; proxima(); } };
       }
     }
 
     function fim() {
       parar();
+      aoTeclar = null;
       marcarMissao("silabas");
       alterar(s => {
         s.silabas.sessoes.push({ data: hojeISO(), familia: familia.id, total: palavras.length, certasRitmo });
@@ -159,5 +179,5 @@ export function render(raiz, ir) {
   }
 
   inicio();
-  return parar;
+  return () => { parar(); document.removeEventListener("keydown", ouvirTeclado); };
 }

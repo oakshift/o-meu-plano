@@ -80,6 +80,16 @@ export function som(tipo) {
   }
 }
 
+// Rato e teclado (computador) em vez de dedo (tablet).
+export function temTeclado() {
+  return window.matchMedia("(pointer: fine)").matches;
+}
+
+// Computador com ecrã tátil: tem as duas coisas.
+export function temToque() {
+  return window.matchMedia("(any-pointer: coarse)").matches;
+}
+
 export function vibrar(ms = 20) {
   if (navigator.vibrate) navigator.vibrate(ms);
 }
