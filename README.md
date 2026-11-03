@@ -69,11 +69,39 @@ js/  app.js         router
      audio.js       voz (pt-PT) e gravação
      leitura.js  matematica.js  silabas.js  tempo.js  progresso.js  pais.js
 data/ textos.js  matematica.js  palavras.js  aaz.js
-_teste.html         40 testes — abrir num servidor local
+      falas.js      índice do áudio (gerado)
+audio/              voz de cada texto, problema, palavra e sílaba (gerado)
+ferramentas/gerar-audio.py   gera audio/ e data/falas.js
+_teste.html         43 testes — abrir num servidor local
 ```
 
 Sem dependências, sem build, sem passo de compilação. JavaScript com módulos
 ES nativos.
+
+## Áudio
+
+As vozes do browser não são de confiança (no Linux, o Brave em snap não tem
+nenhuma, e as do sistema são robóticas), por isso a app traz o seu próprio
+áudio, gerado com o [Piper](https://github.com/rhasspy/piper) e a voz
+portuguesa "tugão". **Depois de mudar ou acrescentar um texto, problema ou
+palavra, é preciso voltar a gerar** — senão esse fica sem som:
+
+```sh
+# uma vez só: instalar o Piper e descarregar a voz
+python3 -m venv ferramentas/.venv
+ferramentas/.venv/bin/pip install piper-tts
+cd ferramentas/vozes   # (criar a pasta)
+curl -LO "https://huggingface.co/rhasspy/piper-voices/resolve/main/pt/pt_PT/tug%C3%A3o/medium/pt_PT-tug%C3%A3o-medium.onnx"
+curl -LO "https://huggingface.co/rhasspy/piper-voices/resolve/main/pt/pt_PT/tug%C3%A3o/medium/pt_PT-tug%C3%A3o-medium.onnx.json"
+cd ../..
+
+# sempre que os conteúdos mudam
+ferramentas/.venv/bin/python ferramentas/gerar-audio.py
+```
+
+O teste "todos os textos … têm ficheiro" falha se alguém se esquecer.
+Os textos que os pais acrescentam no painel não têm áudio: usam a voz do
+browser, quando existe.
 
 ## Correr localmente
 

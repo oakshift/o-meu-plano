@@ -138,18 +138,18 @@ export function render(raiz, ir) {
           [...tira.children].forEach(c => c.classList.remove("acesa"));
           if (i < alvo.s.length) {
             tira.children[i].classList.add("acesa");
-            if (audio.temVoz()) audio.falar(alvo.s[i], { velocidade: 0.8 });
+            if (audio.temVoz(alvo.s[i])) audio.falar(alvo.s[i], { velocidade: 0.8 });
             som("toque");
             i++;
             temporizador = setTimeout(acender, 700);
           } else {
-            if (audio.temVoz()) audio.falar(alvo.p, { velocidade: 0.85 });
+            if (audio.temVoz(alvo.p)) audio.falar(alvo.p, { velocidade: 0.85 });
           }
         }
         temporizador = setTimeout(acender, 400);
 
         zona.appendChild(el("div", { class: "linha-botoes", style: "margin-top:12px" }, [
-          audio.temVoz() ? el("button", { class: "btn", onClick: () => { parar(); audio.falar(alvo.p, { velocidade: 0.8 }); } }, "🔊  Ouvir") : null,
+          audio.temVoz(alvo.p) ? el("button", { class: "btn", onClick: () => { parar(); audio.falar(alvo.p, { velocidade: 0.8 }); } }, "🔊  Ouvir") : null,
           el("button", { class: "btn btn-grande btn-silabas", onClick: () => { indice++; proxima(); } }, "Já li — seguinte")
         ]));
         // Só o Enter avança: o espaço podia ser uma batida a mais.

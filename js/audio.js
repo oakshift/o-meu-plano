@@ -3,6 +3,45 @@
 //  1. as vozes só aparecem depois do evento voiceschanged, e a primeira
 //     fala tem de nascer de um toque do utilizador;
 //  2. o MediaRecorder grava em audio/mp4, não em webm.
+//
+// E uma armadilha dos computadores: no Linux, o Brave em snap não tem vozes
+// nenhumas, e as do sistema são robóticas. Por isso os textos da app têm
+// áudio próprio em audio/, gerado por ferramentas/gerar-audio.py. A voz do
+// browser fica só para o que não tem áudio (os textos que os pais acrescentam).
+
+import { FALAS } from "../data/falas.js";
+
+// A mesma conta que ferramentas/gerar-audio.py faz para dar nome ao ficheiro.
+export function impressao(texto) {
+  let h = 0x811c9dc5;
+  for (const b of new TextEncoder().encode(String(texto).trim().replace(/\s+/g, " "))) {
+    h ^= b;
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h.toString(16).padStart(8, "0");
+}
+
+function temAudio(texto) {
+  return FALAS.has(impressao(texto));
+}
+
+let tocador = null;
+
+// O play() tem de acontecer logo no toque (sem esperas pelo meio), senão o
+// Safari recusa-se a tocar.
+function tocar(texto, aoTerminar) {
+  const a = new Audio(`audio/${impressao(texto)}.mp3`);
+  tocador = a;
+  a.onended = () => { if (tocador === a) tocador = null; if (aoTerminar) aoTerminar(); };
+  a.onerror = () => {
+    if (tocador !== a) return;
+    tocador = null;
+    // Sem rede e sem o ficheiro em cache: tenta a voz do browser.
+    if (vozDoBrowser()) falarComVoz(texto, {}, aoTerminar);
+    else if (aoTerminar) aoTerminar();
+  };
+  a.play().catch(() => { /* o onerror trata do resto */ });
+}
 
 let vozPT = null;
 let vozesProntas = false;
@@ -26,12 +65,23 @@ export function prepararVozes() {
   });
 }
 
-export function temVoz() {
-  return "speechSynthesis" in window;
+function vozDoBrowser() {
+  return "speechSynthesis" in window && speechSynthesis.getVoices().length > 0;
+}
+
+// Há maneira de ler este texto em voz alta?
+export function temVoz(texto) {
+  return temAudio(texto) || vozDoBrowser();
 }
 
 export function falar(texto, { velocidade = 0.92, aoTerminar = null } = {}) {
-  if (!("speechSynthesis" in window)) return null;
+  pararDeFalar();
+  if (temAudio(texto)) { tocar(texto, aoTerminar); return true; }
+  if (!vozDoBrowser()) { if (aoTerminar) aoTerminar(); return null; }
+  return falarComVoz(texto, { velocidade }, aoTerminar);
+}
+
+function falarComVoz(texto, { velocidade = 0.92 }, aoTerminar) {
   speechSynthesis.cancel();
   if (!vozPT) vozPT = escolherVoz();
   const frases = String(texto).split(/\n{2,}/).filter(t => t.trim());
@@ -52,11 +102,12 @@ export function falar(texto, { velocidade = 0.92, aoTerminar = null } = {}) {
 }
 
 export function pararDeFalar() {
+  if (tocador) { const a = tocador; tocador = null; a.pause(); }
   if ("speechSynthesis" in window) speechSynthesis.cancel();
 }
 
 export function estaAFalar() {
-  return "speechSynthesis" in window && speechSynthesis.speaking;
+  return !!tocador || ("speechSynthesis" in window && speechSynthesis.speaking);
 }
 
 // ---------- gravação ----------

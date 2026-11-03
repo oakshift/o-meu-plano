@@ -166,10 +166,11 @@ dentro do browser, e o que ele fizer no Brave não aparece no Firefox, e
 vice-versa. O Brave tem a vantagem de abrir a app numa janela própria, sem
 barra de endereço — menos caminho até ao YouTube.
 
-Antes de escolher, abram uma missão de leitura em cada um e carreguem em
-ouvir o texto: a voz que lê em voz alta vem do computador e muda de browser
-para browser. Fiquem com o que tiver a voz portuguesa mais clara. Nas
-Histórias AaZ isto não conta, porque quem lê é o vídeo.
+**A voz que lê em voz alta** vem com a própria app: os textos, os
+problemas e as palavras das sílabas têm áudio gravado com uma voz
+sintética portuguesa, e soa igual em qualquer browser. Os textos que vocês
+acrescentarem não têm esse áudio — para esses, ou o browser tem voz própria
+(no Brave deste computador não tem), ou leem-lhos vocês.
 
 **Não deixem o browser apagar os dados ao fechar**, senão perde-se o
 progresso todos os dias:
@@ -211,7 +212,7 @@ disponível, começa-se do zero — os níveis voltam a subir depressa.
 **PIN inicial: 2468.** Mudem-no nas Definições, senão ele descobre.
 
 **Textos vossos:** Painel dos pais → Textos. Colam o texto e ele entra na
-rotação no dia seguinte. Para uso familiar podem usar o que
+rotação no dia seguinte. (Sem áudio gravado — ver acima.) Para uso familiar podem usar o que
 quiserem; só não vale a pena publicar textos protegidos no repositório.
 
 **Histórias AaZ:** 24 histórias de autores portugueses da Iniciativa

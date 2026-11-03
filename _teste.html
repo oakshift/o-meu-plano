@@ -286,6 +286,22 @@ try {
     return (contagem === "2" && depois === "2") || `contagem=${contagem} depois de sair=${depois}`;
   });
 
+  const { FALAS } = await import("./data/falas.js");
+  t("áudio: todos os textos, problemas, palavras e sílabas têm ficheiro", () => {
+    const falta = [
+      ...textos.TEXTOS.map(x => x.texto), ...mat.PROBLEMAS.map(x => x.texto),
+      ...pal.FAMILIAS.flatMap(f => f.palavras.flatMap(w => [w.p, ...w.s]))
+    ].filter(x => !FALAS.has(audio.impressao(x)));
+    return falta.length === 0 || `sem áudio: ${falta.slice(0, 3).join(" | ")} (correr ferramentas/gerar-audio.py)`;
+  });
+  t("áudio: impressão ignora espaços a mais", () =>
+    audio.impressao("  olá   mundo ") === audio.impressao("olá mundo") || "diferentes");
+  {
+    const amostra = [textos.TEXTOS[0].texto, mat.PROBLEMAS[0].texto, pal.FAMILIAS[0].palavras[0].p];
+    const respostas = await Promise.all(amostra.map(x => fetch(`audio/${audio.impressao(x)}.mp3`, { method: "HEAD" })));
+    t("áudio: os ficheiros existem mesmo", () => respostas.every(r => r.ok) || respostas.map(r => r.status).join(","));
+  }
+
   t("audio: funções expostas", () => typeof audio.falar === "function" && typeof audio.podeGravar === "function");
 
 } catch (e) {

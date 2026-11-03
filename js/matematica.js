@@ -279,7 +279,7 @@ export function render(raiz, ir) {
       const painel = el("div", { class: "painel" }, [
         el("div", { class: "rotulo", texto: `Problema ${indice + 1} de ${lista.length}` }),
         el("p", { class: "texto-leitura", texto: p.texto, style: "margin:12px 0" }),
-        audio.temVoz() ? el("button", { class: "btn", onClick: () => audio.falar(p.texto, { velocidade: 0.85 }) }, "🔊  Ouvir o problema") : null,
+        audio.temVoz(p.texto) ? el("button", { class: "btn", onClick: () => audio.falar(p.texto, { velocidade: 0.85 }) }, "🔊  Ouvir o problema") : null,
         p.dica ? el("p", { class: "ajuda", style: "margin-top:10px", texto: "Dica: " + p.dica }) : null,
         caixa
       ]);

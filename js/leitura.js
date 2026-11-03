@@ -186,7 +186,10 @@ export function render(raiz, ir) {
       });
       btnSaltar.addEventListener("click", () => { audio.pararDeFalar(); passoLer(); });
 
-      if (audio.temVoz() && !config.video) raiz.appendChild(btnOuvir);
+      if (!config.video) {
+        if (audio.temVoz(texto.texto)) raiz.appendChild(btnOuvir);
+        else raiz.appendChild(el("p", { class: "ajuda", texto: "Este texto não tem voz neste computador. Pede a alguém que to leia em voz alta, ou passa à frente." }));
+      }
       raiz.appendChild(btnSaltar);
       trocar(() => audio.pararDeFalar());
     }
