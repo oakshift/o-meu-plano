@@ -52,6 +52,7 @@ export function render(raiz, ir) {
     const opcoes = [
       ["📏", "Avaliação da semana", "Medir palavras corretas por minuto", avaliacao],
       ["📈", "Relatório detalhado", "Leitura, matemática e tempo de ecrã", relatorio],
+      ["🎙️", "Gravar as leituras", `${textosParaGravar().filter(t => audio.temModelo(t.id)).length} de ${textosParaGravar().length} textos com a vossa voz`, leiturasModelo],
       ["🎧", "Ouvir as gravações", "As leituras dele, guardadas neste computador", gravacoes],
       ["✏️", "Textos", "Acrescentar textos vossos", textos],
       ["⚙️", "Definições", "Tempo de ecrã, nível, missões, PIN", definicoes]
@@ -377,6 +378,131 @@ export function render(raiz, ir) {
         }
       }, "Apagar todas as gravações"));
     });
+  }
+
+  // ---------- leituras modelo ----------
+
+  // Os textos que ele lê na app; os associados a uma história AaZ já têm o
+  // vídeo como modelo. Primeiro os do nível em que ele está.
+  function textosParaGravar() {
+    const nivel = obter().config.nivelLeitura;
+    return [...TEXTOS, ...obter().textosProprios.filter(t => !t.aazSlug)]
+      .map((t, ordem) => ({ ...t, ordem }))
+      .sort((a, b) => (a.nivel !== nivel) - (b.nivel !== nivel) || a.nivel - b.nivel || a.ordem - b.ordem);
+  }
+
+  function leiturasModelo() {
+    trocar(null);
+    limpar(raiz);
+    raiz.appendChild(cabecalho("Gravar as leituras", "Leiam cada texto em voz alta, devagar e com expressão. É a vossa voz que ele ouve antes de ler.", menu));
+    const lista = textosParaGravar();
+    const feitas = lista.filter(t => audio.temModelo(t.id)).length;
+    raiz.appendChild(el("div", { class: "painel plano" }, [
+      el("div", { class: "rotulo", texto: "Gravados" }),
+      el("div", { class: "numero-medio", texto: `${feitas} de ${lista.length}` }),
+      el("p", { class: "ajuda", style: "margin:0" }, "Os que ainda não têm a vossa voz usam a voz sintética. Comecem pelos do nível em que ele está — aparecem primeiro.")
+    ]));
+    let nivelAtual = null;
+    for (const t of lista) {
+      if (t.nivel !== nivelAtual) {
+        nivelAtual = t.nivel;
+        raiz.appendChild(el("div", { class: "rotulo", style: "margin:18px 0 8px", texto: `Nível ${t.nivel}${t.nivel === obter().config.nivelLeitura ? " — o dele agora" : ""}` }));
+      }
+      const gravado = audio.temModelo(t.id);
+      raiz.appendChild(el("button", { class: `missao${gravado ? " feita" : ""}`, style: "margin-bottom:10px", onClick: () => gravarModelo(t) }, [
+        el("div", { class: "texto" }, [
+          el("div", { class: "titulo", texto: t.titulo }),
+          el("div", { class: "detalhe", texto: `${contarPalavras(t.texto)} palavras${t.tema ? "" : " · texto vosso"}` })
+        ]),
+        el("div", { class: "marca", texto: gravado ? "✅" : "🎙️" })
+      ]));
+    }
+  }
+
+  function gravarModelo(t) {
+    trocar(null);
+    limpar(raiz);
+    raiz.appendChild(cabecalho(t.titulo, `Nível ${t.nivel} · ${contarPalavras(t.texto)} palavras`, leiturasModelo));
+    raiz.appendChild(el("div", { class: "painel" }, [el("p", { class: "texto-leitura", texto: t.texto })]));
+    const zona = el("div", { class: "pilha" });
+    raiz.appendChild(zona);
+
+    let novo = null, urlNovo = null, cron = null;
+    const largar = () => { if (urlNovo) URL.revokeObjectURL(urlNovo); novo = urlNovo = null; };
+    trocar(() => { clearInterval(cron); if (audio.aGravar()) audio.pararDeGravar(); largar(); });
+
+    function seguinte() {
+      const lista = textosParaGravar();
+      const daqui = lista.slice(lista.findIndex(x => x.id === t.id) + 1);
+      return daqui.find(x => !audio.temModelo(x.id)) || lista.find(x => !audio.temModelo(x.id)) || null;
+    }
+
+    function desenhar(aviso = "") {
+      limpar(zona);
+      if (aviso) zona.appendChild(el("div", { class: "aviso" }, aviso));
+      if (novo) {
+        zona.appendChild(el("div", { class: "painel centrado" }, [
+          el("div", { class: "rotulo", texto: "Ouçam antes de guardar" }),
+          el("audio", { controls: true, src: urlNovo, style: "width:100%;margin-top:10px" })
+        ]));
+        zona.appendChild(el("button", {
+          class: "btn btn-grande btn-principal", onClick: async () => {
+            try { await audio.guardarModelo(t.id, novo); }
+            catch (e) { desenhar("Não foi possível guardar: " + e.message); return; }
+            largar(); som("certo"); guardado();
+          }
+        }, "Guardar esta gravação"));
+        zona.appendChild(el("button", { class: "btn btn-grande", onClick: () => { largar(); gravar(); } }, "● Gravar outra vez"));
+        zona.appendChild(el("button", { class: "btn btn-fantasma", onClick: () => { largar(); desenhar(); } }, "Deitar fora"));
+        return;
+      }
+      if (audio.temModelo(t.id)) {
+        zona.appendChild(el("div", { class: "painel centrado" }, [
+          el("div", { class: "rotulo", texto: "A gravação que ele ouve" }),
+          el("audio", { controls: true, src: audio.urlModelo(t.id), style: "width:100%;margin-top:10px" })
+        ]));
+        zona.appendChild(el("button", { class: "btn btn-grande", onClick: gravar }, "● Gravar outra vez"));
+        zona.appendChild(el("button", {
+          class: "btn btn-fantasma", onClick: async () => {
+            if (!confirmar("Apagar a gravação deste texto?")) return;
+            await audio.apagarModelo(t.id); desenhar();
+          }
+        }, "Apagar a gravação"));
+      } else {
+        zona.appendChild(el("button", { class: "btn btn-grande btn-leitura", onClick: gravar }, "● Gravar"));
+        zona.appendChild(el("p", { class: "ajuda centrado" }, "Carreguem em Gravar, leiam o texto todo e carreguem em Parar."));
+      }
+    }
+
+    async function gravar() {
+      if (!audio.podeGravar()) { desenhar("Este browser não deixa gravar som."); return; }
+      try { await audio.comecarAGravar(); }
+      catch (e) { desenhar("Não foi possível usar o microfone. Confirmem que o browser tem autorização para o usar (ícone ao lado do endereço)."); return; }
+      limpar(zona);
+      const inicio = Date.now();
+      const relogio = el("div", { class: "numero-medio centrado", texto: "0:00" });
+      zona.appendChild(el("div", { class: "painel centrado" }, [el("div", { class: "rotulo", texto: "🔴 A gravar" }), relogio]));
+      cron = setInterval(() => { relogio.textContent = mmss((Date.now() - inicio) / 1000); }, 250);
+      zona.appendChild(el("button", {
+        class: "btn btn-grande btn-principal", onClick: async () => {
+          clearInterval(cron);
+          novo = await audio.pararDeGravar();
+          urlNovo = novo ? URL.createObjectURL(novo) : null;
+          desenhar(novo ? "" : "A gravação saiu vazia. Tentem outra vez.");
+        }
+      }, "◼ Parar"));
+    }
+
+    function guardado() {
+      limpar(zona);
+      const prox = seguinte();
+      zona.appendChild(el("div", { class: "aviso bom" }, "Guardado. É esta a voz que ele vai ouvir neste texto."));
+      if (prox) zona.appendChild(el("button", { class: "btn btn-grande btn-leitura", onClick: () => gravarModelo(prox) }, `Gravar o seguinte: ${prox.titulo} →`));
+      else zona.appendChild(el("div", { class: "aviso bom" }, "Todos os textos têm a vossa voz. 🎉"));
+      zona.appendChild(el("button", { class: "btn btn-grande", onClick: leiturasModelo }, "Voltar à lista"));
+    }
+
+    desenhar();
   }
 
   // ---------- textos ----------

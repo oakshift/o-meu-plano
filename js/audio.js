@@ -29,8 +29,8 @@ let tocador = null;
 
 // O play() tem de acontecer logo no toque (sem esperas pelo meio), senão o
 // Safari recusa-se a tocar.
-function tocar(texto, aoTerminar) {
-  const a = new Audio(`audio/${impressao(texto)}.mp3`);
+function tocar(url, texto, aoTerminar) {
+  const a = new Audio(url);
   tocador = a;
   a.onended = () => { if (tocador === a) tocador = null; if (aoTerminar) aoTerminar(); };
   a.onerror = () => {
@@ -69,14 +69,17 @@ function vozDoBrowser() {
   return "speechSynthesis" in window && speechSynthesis.getVoices().length > 0;
 }
 
-// Há maneira de ler este texto em voz alta?
-export function temVoz(texto) {
-  return temAudio(texto) || vozDoBrowser();
+// Há maneira de ler este texto em voz alta? `modelo` é o id do texto, para
+// procurar uma gravação feita pelos pais.
+export function temVoz(texto, modelo = null) {
+  return temModelo(modelo) || temAudio(texto) || vozDoBrowser();
 }
 
-export function falar(texto, { velocidade = 0.92, aoTerminar = null } = {}) {
+// Por ordem de preferência: a voz dos pais, o áudio da app, a voz do browser.
+export function falar(texto, { velocidade = 0.92, aoTerminar = null, modelo = null } = {}) {
   pararDeFalar();
-  if (temAudio(texto)) { tocar(texto, aoTerminar); return true; }
+  if (temModelo(modelo)) { tocar(modelos.get(modelo), texto, aoTerminar); return true; }
+  if (temAudio(texto)) { tocar(`audio/${impressao(texto)}.mp3`, texto, aoTerminar); return true; }
   if (!vozDoBrowser()) { if (aoTerminar) aoTerminar(); return null; }
   return falarComVoz(texto, { velocidade }, aoTerminar);
 }
@@ -154,13 +157,13 @@ const DB_NOME = "plano-gravacoes";
 const LOJA = "gravacoes";
 const MAXIMO = 12;
 
-function abrirDB() {
+function abrirDB(nome = DB_NOME, loja = LOJA, chave = { keyPath: "id", autoIncrement: true }) {
   return new Promise((resolve, reject) => {
-    const pedido = indexedDB.open(DB_NOME, 1);
+    const pedido = indexedDB.open(nome, 1);
     pedido.onupgradeneeded = () => {
       const db = pedido.result;
-      if (!db.objectStoreNames.contains(LOJA)) {
-        db.createObjectStore(LOJA, { keyPath: "id", autoIncrement: true });
+      if (!db.objectStoreNames.contains(loja)) {
+        db.createObjectStore(loja, chave);
       }
     };
     pedido.onsuccess = () => resolve(pedido.result);
@@ -225,4 +228,64 @@ export async function apagarGravacoes() {
     });
     db.close();
   } catch (e) { /* não faz mal */ }
+}
+
+// ---------- leituras modelo, gravadas pelos pais ----------
+//
+// A voz da mãe ou do pai a ler o texto é o melhor modelo que ele pode ouvir.
+// Uma gravação por texto, guardada à parte das leituras dele e sem limite:
+// fica até alguém a apagar ou a substituir. Carregam-se todas no arranque
+// para o botão de ouvir poder tocar logo no toque.
+
+const DB_MODELOS = "plano-modelos";
+const LOJA_MODELOS = "modelos";
+const modelos = new Map(); // id do texto → URL da gravação
+
+const abrirModelos = () => abrirDB(DB_MODELOS, LOJA_MODELOS, { keyPath: "id" });
+
+export function temModelo(id) {
+  return !!id && modelos.has(id);
+}
+
+export function urlModelo(id) {
+  return modelos.get(id) || null;
+}
+
+export async function carregarModelos() {
+  try {
+    const db = await abrirModelos();
+    const todos = await new Promise((res, rej) => {
+      const p = db.transaction(LOJA_MODELOS, "readonly").objectStore(LOJA_MODELOS).getAll();
+      p.onsuccess = () => res(p.result); p.onerror = () => rej(p.error);
+    });
+    db.close();
+    for (const m of todos) modelos.set(m.id, URL.createObjectURL(m.blob));
+  } catch (e) {
+    console.warn("Não foi possível ler as gravações dos pais:", e);
+  }
+}
+
+export async function guardarModelo(id, blob) {
+  const db = await abrirModelos();
+  await new Promise((res, rej) => {
+    const tx = db.transaction(LOJA_MODELOS, "readwrite");
+    tx.objectStore(LOJA_MODELOS).put({ id, blob, quando: Date.now() });
+    tx.oncomplete = res; tx.onerror = () => rej(tx.error);
+  });
+  db.close();
+  if (modelos.has(id)) URL.revokeObjectURL(modelos.get(id));
+  modelos.set(id, URL.createObjectURL(blob));
+  // Pede ao browser que não apague isto sozinho quando lhe faltar espaço.
+  if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+}
+
+export async function apagarModelo(id) {
+  const db = await abrirModelos();
+  await new Promise(res => {
+    const tx = db.transaction(LOJA_MODELOS, "readwrite");
+    tx.objectStore(LOJA_MODELOS).delete(id);
+    tx.oncomplete = res; tx.onerror = res;
+  });
+  db.close();
+  if (modelos.has(id)) { URL.revokeObjectURL(modelos.get(id)); modelos.delete(id); }
 }

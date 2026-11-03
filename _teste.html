@@ -302,6 +302,39 @@ try {
     t("áudio: os ficheiros existem mesmo", () => respostas.every(r => r.ok) || respostas.map(r => r.status).join(","));
   }
 
+  {
+    const id = textos.TEXTOS[0].id;
+    const jaHavia = audio.temModelo(id);
+    if (!jaHavia) await audio.guardarModelo(id, new Blob(["x"], { type: "audio/webm" }));
+    const tocados = [];
+    const playOriginal = HTMLMediaElement.prototype.play;
+    HTMLMediaElement.prototype.play = function () { tocados.push(this.src); return Promise.resolve(); };
+    audio.falar(textos.TEXTOS[0].texto, { modelo: id });
+    audio.pararDeFalar();
+    HTMLMediaElement.prototype.play = playOriginal;
+    const guardou = audio.temModelo(id);
+    if (!jaHavia) await audio.apagarModelo(id);
+    t("modelos: a gravação dos pais toca antes do áudio da app", () =>
+      (guardou && tocados[0] && tocados[0].startsWith("blob:")) || `guardou=${guardou} tocou=${tocados[0]}`);
+    t("modelos: apagar a gravação apaga mesmo", () => jaHavia || !audio.temModelo(id) || "ainda lá está");
+  }
+
+  t("pais: o ecrã de gravar lista todos os textos para gravar", () => {
+    const z = document.createElement("div");
+    document.body.appendChild(z);
+    const sair = pais.render(z, () => {});
+    z.querySelector("input").value = store.obter().config.pin;
+    [...z.querySelectorAll("button")].find(b => b.textContent === "Entrar").click();
+    [...z.querySelectorAll("button")].find(b => /Gravar as leituras/.test(b.textContent)).click();
+    const n = z.querySelectorAll("button.missao").length;
+    const esperado = textos.TEXTOS.length + store.obter().textosProprios.filter(x => !x.aazSlug).length;
+    [...z.querySelectorAll("button.missao")][0].click();
+    const temGravar = [...z.querySelectorAll("button")].some(b => /Gravar/.test(b.textContent));
+    if (sair) sair();
+    z.remove();
+    return (n === esperado && temGravar) || `${n} textos na lista, esperava ${esperado}; botão gravar=${temGravar}`;
+  });
+
   t("audio: funções expostas", () => typeof audio.falar === "function" && typeof audio.podeGravar === "function");
 
 } catch (e) {

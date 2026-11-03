@@ -72,13 +72,17 @@ data/ textos.js  matematica.js  palavras.js  aaz.js
       falas.js      índice do áudio (gerado)
 audio/              voz de cada texto, problema, palavra e sílaba (gerado)
 ferramentas/gerar-audio.py   gera audio/ e data/falas.js
-_teste.html         43 testes — abrir num servidor local
+_teste.html         46 testes — abrir num servidor local
 ```
 
 Sem dependências, sem build, sem passo de compilação. JavaScript com módulos
 ES nativos.
 
 ## Áudio
+
+A voz preferida é a dos pais: no painel, *Gravar as leituras* guarda uma
+gravação por texto (IndexedDB, `plano-modelos`), que passa à frente de tudo
+o resto. Para o que não tiver gravação dos pais:
 
 As vozes do browser não são de confiança (no Linux, o Brave em snap não tem
 nenhuma, e as do sistema são robóticas), por isso a app traz o seu próprio

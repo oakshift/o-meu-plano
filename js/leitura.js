@@ -182,12 +182,12 @@ export function render(raiz, ir) {
       btnOuvir.addEventListener("click", () => {
         if (aFalar) { audio.pararDeFalar(); aFalar = false; btnOuvir.textContent = "▶︎  Ouvir a história"; return; }
         aFalar = true; btnOuvir.textContent = "◼︎  Parar";
-        audio.falar(texto.texto, { aoTerminar: () => { aFalar = false; btnOuvir.textContent = "▶︎  Ouvir outra vez"; } });
+        audio.falar(texto.texto, { modelo: texto.id, aoTerminar: () => { aFalar = false; btnOuvir.textContent = "▶︎  Ouvir outra vez"; } });
       });
       btnSaltar.addEventListener("click", () => { audio.pararDeFalar(); passoLer(); });
 
       if (!config.video) {
-        if (audio.temVoz(texto.texto)) raiz.appendChild(btnOuvir);
+        if (audio.temVoz(texto.texto, texto.id)) raiz.appendChild(btnOuvir);
         else raiz.appendChild(el("p", { class: "ajuda", texto: "Este texto não tem voz neste computador. Pede a alguém que to leia em voz alta, ou passa à frente." }));
       }
       raiz.appendChild(btnSaltar);

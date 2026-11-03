@@ -67,8 +67,11 @@ document.addEventListener("visibilitychange", () => {
   if (!document.hidden && ecraAtual === "casa") ir("casa");
 });
 
-if (!obter().perfil.criadoEm) boasVindas();
-else ir("casa");
+// As gravações dos pais vêm primeiro, para o botão de ouvir já as conhecer.
+audio.carregarModelos().finally(() => {
+  if (!obter().perfil.criadoEm) boasVindas();
+  else ir("casa");
+});
 
 if ("serviceWorker" in navigator) {
   // Quando sai uma versão nova, o browser ainda abre a antiga (a da cache) e

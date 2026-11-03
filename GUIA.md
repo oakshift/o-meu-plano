@@ -166,11 +166,21 @@ dentro do browser, e o que ele fizer no Brave não aparece no Firefox, e
 vice-versa. O Brave tem a vantagem de abrir a app numa janela própria, sem
 barra de endereço — menos caminho até ao YouTube.
 
-**A voz que lê em voz alta** vem com a própria app: os textos, os
-problemas e as palavras das sílabas têm áudio gravado com uma voz
-sintética portuguesa, e soa igual em qualquer browser. Os textos que vocês
-acrescentarem não têm esse áudio — para esses, ou o browser tem voz própria
-(no Brave deste computador não tem), ou leem-lhos vocês.
+**A voz que lê os textos é a vossa.** Painel dos pais → *Gravar as
+leituras*: aparece a lista dos textos, primeiro os do nível dele. Escolhem
+um, carregam em Gravar, leem o texto todo em voz alta — devagar e com
+expressão, que é isso que ele vai imitar — e carregam em Parar. Ouvem, e se
+estiver bem guardam; se não, gravam outra vez. A app passa logo ao texto
+seguinte por gravar. A gravação fica guardada e é a que ele ouve, todos os
+dias, antes de ler esse texto. Funciona também para os textos que vocês
+acrescentarem.
+
+Gravem **neste computador, na sessão dele e no browser dele** — é aí que a
+app guarda as coisas. Gravado noutra sessão, ele não o ouve.
+
+Enquanto um texto não tiver a vossa voz, a app usa uma voz sintética
+portuguesa (tem algumas falhas). Os problemas de matemática e as palavras
+das sílabas usam sempre essa voz.
 
 **Não deixem o browser apagar os dados ao fechar**, senão perde-se o
 progresso todos os dias:
@@ -201,8 +211,9 @@ preciso uns auscultadores com microfone.
 
 **Os dados** ficam todos neste computador, dentro do browser. Não há
 contas, não há servidor, nada sai do dispositivo. Isso tem uma
-consequência: **se limparem os dados do browser, perde-se tudo.** Exportem
-de vez em quando (Definições → Exportar).
+consequência: **se limparem os dados do browser, perde-se tudo** — também
+as vossas gravações das leituras. Exportem de vez em quando (Definições →
+Exportar); a exportação guarda o progresso, mas não as gravações.
 
 **Vindo do iPad:** o progresso do iPad não passa sozinho para o computador.
 Se o iPad ainda existir, abram lá a app → Definições → *Exportar*, passem o
@@ -212,7 +223,7 @@ disponível, começa-se do zero — os níveis voltam a subir depressa.
 **PIN inicial: 2468.** Mudem-no nas Definições, senão ele descobre.
 
 **Textos vossos:** Painel dos pais → Textos. Colam o texto e ele entra na
-rotação no dia seguinte. (Sem áudio gravado — ver acima.) Para uso familiar podem usar o que
+rotação no dia seguinte. Gravem-lhe depois a leitura, como aos outros. Para uso familiar podem usar o que
 quiserem; só não vale a pena publicar textos protegidos no repositório.
 
 **Histórias AaZ:** 24 histórias de autores portugueses da Iniciativa
