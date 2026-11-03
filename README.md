@@ -5,7 +5,7 @@ tempo de ecrã gerido pela própria.
 
 Página web sem servidor, sem contas e sem recolha de dados: tudo o que a app
 guarda fica no dispositivo onde é usada. Começou por ser feita para o iPad;
-hoje é usada num computador, no Firefox ou no Brave, com ecrã tátil, rato
+hoje é usada num computador, no Brave (ou no Firefox), com ecrã tátil, rato
 e teclado — e continua a funcionar em tablets.
 
 **→ [Guia para os pais](GUIA.md)** — o método, a rotina e como interpretar

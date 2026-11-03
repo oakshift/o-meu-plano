@@ -160,10 +160,11 @@ leitura. E se estiver a subir, também vale a pena saber.
 
 ## Coisas práticas
 
-**Que browser usar:** escolham **um** — Firefox ou Brave, ambos servem — e
-usem sempre esse. Os dados ficam guardados dentro do browser: o que ele
-fizer no Firefox não aparece no Brave, e vice-versa. Na dúvida, o Firefox,
-que é onde os testes da app correm.
+**Que browser usar:** o **Brave**, que é o que usamos em casa (o Firefox
+também serve). O importante é usar sempre o mesmo: os dados ficam guardados
+dentro do browser, e o que ele fizer no Brave não aparece no Firefox, e
+vice-versa. O Brave tem a vantagem de abrir a app numa janela própria, sem
+barra de endereço — menos caminho até ao YouTube.
 
 Antes de escolher, abram uma missão de leitura em cada um e carreguem em
 ouvir o texto: a voz que lê em voz alta vem do computador e muda de browser
