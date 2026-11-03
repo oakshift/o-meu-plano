@@ -76,8 +76,9 @@ arrancados à força durante três semanas.
 
 ### Leitura — leitura repetida
 
-Ouve o texto lido em voz alta → lê ele → lê outra vez → e uma terceira,
-sempre o **mesmo** texto. A velocidade sobe visivelmente entre a primeira
+Ouve a história contada no vídeo AaZ (ou, num texto vosso, a vossa
+gravação) → lê ele → lê outra vez → e uma terceira, sempre o **mesmo**
+texto. A velocidade sobe visivelmente entre a primeira
 e a terceira leitura, e ele vê isso acontecer em cinco minutos.
 
 É o método com melhor evidência para leitores que descodificam com esforço.
@@ -166,21 +167,20 @@ dentro do browser, e o que ele fizer no Brave não aparece no Firefox, e
 vice-versa. O Brave tem a vantagem de abrir a app numa janela própria, sem
 barra de endereço — menos caminho até ao YouTube.
 
-**A voz que lê os textos é a vossa.** Painel dos pais → *Gravar as
-leituras*: aparece a lista dos textos, primeiro os do nível dele. Escolhem
-um, carregam em Gravar, leem o texto todo em voz alta — devagar e com
-expressão, que é isso que ele vai imitar — e carregam em Parar. Ouvem, e se
-estiver bem guardam; se não, gravam outra vez. A app passa logo ao texto
-seguinte por gravar. A gravação fica guardada e é a que ele ouve, todos os
-dias, antes de ler esse texto. Funciona também para os textos que vocês
-acrescentarem.
+**Não há voz sintética.** As vozes do computador soavam robóticas e com
+falhas — mau modelo para quem aprende a ler. Quem lê para ele é o vídeo das
+histórias AaZ, ou a vossa voz nos textos que acrescentarem. Nos problemas de
+matemática e nas sílabas não há voz: se uma palavra o travar, leiam-lha.
 
-Gravem **neste computador, na sessão dele e no browser dele** — é aí que a
-app guarda as coisas. Gravado noutra sessão, ele não o ouve.
+**Gravar a vossa voz:** Painel dos pais → *Gravar as leituras* mostra os
+textos que vocês acrescentaram. Escolhem um, carregam em Gravar, leem o
+texto todo em voz alta — devagar e com expressão, que é isso que ele vai
+imitar — e carregam em Parar. Ouvem, e se estiver bem guardam; se não,
+gravam outra vez. A gravação fica guardada e é a que ele ouve, todos os
+dias, antes de ler esse texto.
 
-Enquanto um texto não tiver a vossa voz, a app usa uma voz sintética
-portuguesa (tem algumas falhas). Os problemas de matemática e as palavras
-das sílabas usam sempre essa voz.
+Gravem **na sessão dele e no browser dele** — é aí que a app guarda as
+coisas. Gravado noutra sessão, ele não o ouve.
 
 **Não deixem o browser apagar os dados ao fechar**, senão perde-se o
 progresso todos os dias:
@@ -226,9 +226,11 @@ disponível, começa-se do zero — os níveis voltam a subir depressa.
 rotação no dia seguinte. Gravem-lhe depois a leitura, como aos outros. Para uso familiar podem usar o que
 quiserem; só não vale a pena publicar textos protegidos no repositório.
 
-**Histórias AaZ:** 24 histórias de autores portugueses da Iniciativa
-Educação. O vídeo de cada uma toca dentro da app — ouvir primeiro e ler a
-seguir é exatamente o ciclo certo.
+**Histórias AaZ:** são a leitura da app — 24 histórias de autores
+portugueses da Iniciativa Educação. Todos os dias a app sugere uma, do
+tamanho certo para o nível dele (Definições → nível). O vídeo de cada uma
+toca dentro da app — ouvir primeiro e ler a seguir é exatamente o ciclo
+certo.
 
 O texto, esse, continua a abrir no site: são obras com direitos de autor e
 não podem ser copiadas para um repositório público. Mas há uma saída, e vale
@@ -236,4 +238,7 @@ a pena usá-la: em *Textos*, o primeiro campo pergunta se aquilo é uma
 história AaZ. Se colarem lá o texto e escolherem a história, ela passa a
 funcionar como qualquer outra — vídeo em cima, texto por baixo, três
 leituras, sem sair da app. Esse texto fica guardado só neste computador e
-nunca é publicado, o que é uso familiar e legítimo.
+nunca é publicado, o que é uso familiar e legítimo. As histórias com texto
+colado também são as que servem para a medição semanal, que precisa do
+texto dentro da app — por isso vale a pena colar algumas que ele ainda não
+tenha lido.

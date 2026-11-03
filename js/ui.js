@@ -30,6 +30,10 @@ export function minutosBonitos(segundos) {
   return `${h}h${String(m % 60).padStart(2, "0")}`;
 }
 
+export function contarPalavras(txt) {
+  return txt.trim().split(/\s+/).filter(Boolean).length;
+}
+
 export function baralhar(arr) {
   const a = arr.slice();
   for (let i = a.length - 1; i > 0; i--) {

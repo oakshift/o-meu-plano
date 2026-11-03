@@ -10,7 +10,6 @@
 import { FAMILIAS } from "../data/palavras.js";
 import { obter, alterar, hojeISO, marcarMissao } from "./store.js";
 import { el, limpar, som, vibrar, cabecalho, baralhar, temTeclado, temToque } from "./ui.js";
-import * as audio from "./audio.js";
 
 const PALAVRAS_POR_SESSAO = 8;
 
@@ -26,7 +25,7 @@ function sugerirFamilia() {
 
 export function render(raiz, ir) {
   let temporizador = null;
-  const parar = () => { if (temporizador) { clearTimeout(temporizador); temporizador = null; } audio.pararDeFalar(); };
+  const parar = () => { if (temporizador) { clearTimeout(temporizador); temporizador = null; } };
   // No computador o tambor é a barra de espaço.
   let aoTeclar = null;
   const ouvirTeclado = e => { if (aoTeclar) aoTeclar(e); };
@@ -128,28 +127,27 @@ export function render(raiz, ir) {
           el("p", {
             class: certo ? "" : "ajuda",
             style: certo ? "color:var(--tempo);font-weight:700;text-align:center" : "text-align:center",
-            texto: certo ? `Certo: ${alvo.s.length} sílabas.` : `Bateste ${n}. São ${alvo.s.length}: ouve.`
+            texto: certo ? `Certo: ${alvo.s.length} sílabas.` : `Bateste ${n}. São ${alvo.s.length}: vê.`
           })
         ]));
 
-        // Acende sílaba a sílaba, ao ritmo da leitura.
+        // Acende sílaba a sílaba, ao ritmo, para ele as ler em voz alta.
+        // (Sem voz: a sintética lia mal sílabas soltas.)
         let i = 0;
         function acender() {
           [...tira.children].forEach(c => c.classList.remove("acesa"));
           if (i < alvo.s.length) {
             tira.children[i].classList.add("acesa");
-            if (audio.temVoz(alvo.s[i])) audio.falar(alvo.s[i], { velocidade: 0.8 });
             som("toque");
             i++;
             temporizador = setTimeout(acender, 700);
-          } else {
-            if (audio.temVoz(alvo.p)) audio.falar(alvo.p, { velocidade: 0.85 });
           }
         }
         temporizador = setTimeout(acender, 400);
 
+        zona.appendChild(el("p", { class: "ajuda centrado", texto: "Lê as sílabas em voz alta à medida que acendem. Depois lê a palavra toda." }));
         zona.appendChild(el("div", { class: "linha-botoes", style: "margin-top:12px" }, [
-          audio.temVoz(alvo.p) ? el("button", { class: "btn", onClick: () => { parar(); audio.falar(alvo.p, { velocidade: 0.8 }); } }, "🔊  Ouvir") : null,
+          el("button", { class: "btn", onClick: () => { parar(); i = 0; acender(); } }, "↻  Outra vez"),
           el("button", { class: "btn btn-grande btn-silabas", onClick: () => { indice++; proxima(); } }, "Já li — seguinte")
         ]));
         // Só o Enter avança: o espaço podia ser uma batida a mais.

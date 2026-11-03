@@ -6,10 +6,9 @@
 // leitores que descodificam com esforço, e tem a vantagem de a criança ver
 // o progresso dentro da própria sessão, em cinco minutos.
 
-import { TEXTOS, contarPalavras } from "../data/textos.js";
 import { HISTORIAS_AAZ, AAZ_FONTE } from "../data/aaz.js";
 import { obter, alterar, hojeISO, marcarMissao } from "./store.js";
-import { el, limpar, mmss, som, vibrar, cabecalho, escolher } from "./ui.js";
+import { el, limpar, mmss, som, vibrar, cabecalho, escolher, contarPalavras } from "./ui.js";
 import * as audio from "./audio.js";
 
 const TENTATIVAS = 3;
@@ -53,26 +52,34 @@ export function melhorPPMGeral() {
   return melhor;
 }
 
+// Os textos que os pais acrescentaram. Os associados a uma história AaZ
+// vivem na lista das histórias, não aqui.
 function textosDisponiveis() {
   const s = obter();
-  const nivel = s.config.nivelLeitura;
-  // Os associados a uma história AaZ vivem na lista das histórias, não aqui.
-  const proprios = s.textosProprios
+  return s.textosProprios
     .filter(t => !t.aazSlug)
-    .map(t => ({ ...t, fonte: "proprio", nivel: t.nivel || nivel }));
-  const daApp = TEXTOS.filter(t => t.nivel === nivel).map(t => ({ ...t, fonte: "app" }));
-  return [...daApp, ...proprios];
+    .map(t => ({ ...t, fonte: "proprio", nivel: t.nivel || s.config.nivelLeitura }));
 }
 
 function contarLidos(textoId) {
   return obter().leitura.sessoes.filter(x => x.textoId === textoId).length;
 }
 
-function sugerirTexto() {
-  const lista = textosDisponiveis();
-  if (!lista.length) return null;
-  const min = Math.min(...lista.map(t => contarLidos(t.id)));
-  return escolher(lista.filter(t => contarLidos(t.id) === min));
+// Até quantas palavras vai uma história em cada nível de leitura.
+const PALAVRAS_POR_NIVEL = { 1: 100, 2: 175, 3: Infinity };
+
+// A história de hoje: do tamanho certo para o nível dele, de preferência uma
+// que os pais já tenham colado (faz o ciclo todo aqui dentro), e das que ele
+// leu menos vezes.
+function sugerirHistoria() {
+  const limite = PALAVRAS_POR_NIVEL[obter().config.nivelLeitura] || Infinity;
+  let lista = HISTORIAS_AAZ.filter(h => h.palavras <= limite);
+  if (!lista.length) lista = HISTORIAS_AAZ;
+  const completas = lista.filter(h => textoLocalDaHistoria(h.slug));
+  if (completas.length) lista = completas;
+  const lidas = h => contarLidos("aaz-" + h.slug);
+  const min = Math.min(...lista.map(lidas));
+  return escolher(lista.filter(h => lidas(h) === min));
 }
 
 // ---------- ecrã principal ----------
@@ -84,38 +91,33 @@ export function render(raiz, ir) {
   function menu() {
     trocar(null);
     limpar(raiz);
-    raiz.appendChild(cabecalho("Leitura", "Cinco minutos. Lês o mesmo texto três vezes e tentas bater-te a ti próprio.", () => ir("casa")));
+    raiz.appendChild(cabecalho("Leitura", "Cinco minutos. Ouves a história, depois lês tu e tentas bater-te a ti próprio.", () => ir("casa")));
 
-    const sugerido = sugerirTexto();
-    if (sugerido) {
-      const recorde = melhorPPM(sugerido.id);
-      raiz.appendChild(el("div", { class: "painel" }, [
-        el("div", { class: "rotulo", texto: "Texto de hoje" }),
-        el("h2", { texto: sugerido.titulo, style: "margin:6px 0" }),
-        el("p", { class: "ajuda", texto: `${contarPalavras(sugerido.texto)} palavras${recorde ? ` · o teu recorde aqui: ${recorde} palavras por minuto` : ""}` }),
-        el("button", { class: "btn btn-grande btn-leitura", style: "margin-top:10px", onClick: () => sessao(sugerido) }, "Começar")
-      ]));
+    const h = sugerirHistoria();
+    const recorde = melhorPPM("aaz-" + h.slug);
+    raiz.appendChild(el("div", { class: "painel" }, [
+      el("div", { class: "rotulo", texto: "História de hoje" }),
+      el("h2", { texto: h.titulo, style: "margin:6px 0" }),
+      el("p", { class: "ajuda", texto: `${h.autor ? h.autor + " · " : ""}${h.palavras} palavras${recorde ? ` · o teu recorde aqui: ${recorde} palavras por minuto` : ""}` }),
+      el("button", { class: "btn btn-grande btn-leitura", style: "margin-top:10px", onClick: () => sessaoAaz(h, menu) }, "Começar")
+    ]));
+
+    raiz.appendChild(el("button", {
+      class: "btn btn-grande", style: "margin-bottom:14px", onClick: menuAaz
+    }, "Escolher outra história"));
+
+    if (textosDisponiveis().length) {
+      raiz.appendChild(el("button", {
+        class: "btn btn-grande", onClick: escolherOutro
+      }, "Os textos do pai e da mãe"));
     }
-
-    raiz.appendChild(el("button", {
-      class: "btn btn-grande", style: "margin-bottom:14px",
-      onClick: escolherOutro
-    }, "Escolher outro texto"));
-
-    raiz.appendChild(el("button", {
-      class: "btn btn-grande", onClick: menuAaz
-    }, "Histórias AaZ · ler no site"));
   }
 
   function escolherOutro() {
     trocar(null);
     limpar(raiz);
-    raiz.appendChild(cabecalho("Escolhe um texto", null, menu));
+    raiz.appendChild(cabecalho("Os textos do pai e da mãe", null, menu));
     const lista = textosDisponiveis();
-    if (!lista.length) {
-      raiz.appendChild(el("div", { class: "aviso" }, "Ainda não há textos para este nível. Os pais podem acrescentar textos no painel deles."));
-      return;
-    }
     const grelha = el("div", { class: "missoes" });
     for (const t of lista) {
       const recorde = melhorPPM(t.id);
@@ -142,7 +144,7 @@ export function render(raiz, ir) {
     for (const h of HISTORIAS_AAZ) {
       const recorde = melhorPPM("aaz-" + h.slug);
       const completa = !!textoLocalDaHistoria(h.slug);
-      grelha.appendChild(el("button", { class: "missao m-leitura", onClick: () => sessaoAaz(h) }, [
+      grelha.appendChild(el("button", { class: "missao m-leitura", onClick: () => sessaoAaz(h, menuAaz) }, [
         el("div", { class: "icone", texto: completa ? "📖" : "▶️" }),
         el("div", { class: "texto" }, [
           el("div", { class: "titulo", texto: h.titulo }),
@@ -175,23 +177,23 @@ export function render(raiz, ir) {
       const corpo = el("div", { class: "painel" }, [el("p", { class: "texto-leitura", texto: texto.texto })]);
       raiz.appendChild(corpo);
 
-      const btnOuvir = el("button", { class: "btn btn-grande btn-leitura" }, "▶︎  Ouvir a história");
+      const btnOuvir = el("button", { class: "btn btn-grande btn-leitura" }, "▶︎  Ouvir o pai ou a mãe");
       const btnSaltar = el("button", { class: "btn btn-grande", style: "margin-top:10px" }, "Já ouvi — quero ler");
       let aFalar = false;
 
       btnOuvir.addEventListener("click", () => {
-        if (aFalar) { audio.pararDeFalar(); aFalar = false; btnOuvir.textContent = "▶︎  Ouvir a história"; return; }
+        if (aFalar) { audio.pararDeTocar(); aFalar = false; btnOuvir.textContent = "▶︎  Ouvir o pai ou a mãe"; return; }
         aFalar = true; btnOuvir.textContent = "◼︎  Parar";
-        audio.falar(texto.texto, { modelo: texto.id, aoTerminar: () => { aFalar = false; btnOuvir.textContent = "▶︎  Ouvir outra vez"; } });
+        audio.ouvirModelo(texto.id, () => { aFalar = false; btnOuvir.textContent = "▶︎  Ouvir outra vez"; });
       });
-      btnSaltar.addEventListener("click", () => { audio.pararDeFalar(); passoLer(); });
+      btnSaltar.addEventListener("click", () => { audio.pararDeTocar(); passoLer(); });
 
       if (!config.video) {
-        if (audio.temVoz(texto.texto, texto.id)) raiz.appendChild(btnOuvir);
-        else raiz.appendChild(el("p", { class: "ajuda", texto: "Este texto não tem voz neste computador. Pede a alguém que to leia em voz alta, ou passa à frente." }));
+        if (audio.temModelo(texto.id)) raiz.appendChild(btnOuvir);
+        else raiz.appendChild(el("p", { class: "ajuda", texto: "Este texto ainda não está gravado. Pede ao pai ou à mãe que to leia em voz alta, ou passa à frente." }));
       }
       raiz.appendChild(btnSaltar);
-      trocar(() => audio.pararDeFalar());
+      trocar(() => audio.pararDeTocar());
     }
 
     function passoLer() {
@@ -350,7 +352,7 @@ export function render(raiz, ir) {
   // copiado: ou abre no site, ou os pais colam-no no painel deles — e nesse
   // caso a história passa a fazer o ciclo completo aqui dentro.
 
-  function sessaoAaz(h) {
+  function sessaoAaz(h, voltar = menuAaz) {
     trocar(null);
     limpar(raiz);
     const id = "aaz-" + h.slug;
@@ -359,11 +361,11 @@ export function render(raiz, ir) {
     if (local) {
       return sessao(
         { ...local, titulo: h.titulo, fonte: "aaz" },
-        { video: h.video, idRegisto: id, voltar: menuAaz }
+        { video: h.video, idRegisto: id, voltar }
       );
     }
 
-    raiz.appendChild(cabecalho(h.titulo, h.autor || null, menuAaz));
+    raiz.appendChild(cabecalho(h.titulo, h.autor || null, voltar));
     if (h.video) raiz.appendChild(caixaVideo(h.video, h.titulo));
 
     raiz.appendChild(el("div", { class: "painel" }, [

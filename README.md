@@ -17,14 +17,14 @@ os números. É o documento a ler primeiro.
 
 | Missão | Duração | O que treina |
 |---|---|---|
-| **Leitura** | ~5 min | Fluência por leitura repetida: ouvir um modelo, depois ler o mesmo texto três vezes, medindo palavras por minuto |
+| **Leitura** | ~5 min | Fluência por leitura repetida com as Histórias AaZ: ouvir o vídeo, depois ler o mesmo texto três vezes, medindo palavras por minuto |
 | **Matemática** | ~5 min | Factos numéricos com repetição espaçada, com a velocidade de resposta a contar para a progressão |
 | **Sílabas e ritmo** | ~4 min | Descodificação dos padrões difíceis do português, com entrada rítmica |
 | **O meu tempo** | — | Orçamento diário de ecrã que a criança gere sozinha |
 
 E, no painel dos pais: medição semanal de palavras corretas por minuto,
-relatório de evolução, gravações das leituras, e um editor para acrescentar
-textos próprios.
+relatório de evolução, gravações das leituras dele, um editor para
+acrescentar textos próprios e a gravação da vossa voz a lê-los.
 
 ## Duas decisões de desenho
 
@@ -41,15 +41,12 @@ volante.
 
 ## Conteúdos
 
-- **23 textos originais** em português europeu, em três níveis, com perguntas
-  de compreensão. Temas puxados aos interesses do miúdo a que se destina:
-  ténis, música, arqueologia, cabanas, corrida, animais, espaço, planeta.
-- **21 problemas** de um e dois passos, que a app lê em voz alta a pedido — para
-  que a dificuldade de leitura não se disfarce de dificuldade de matemática.
+- **21 problemas** de um e dois passos.
 - **11 competências** de cálculo, do "fazer 10" às tabuadas do 6 ao 9 e às
   divisões, com ligação à Khan Academy quando o erro parece conceptual.
 - **90 palavras** em 9 famílias de padrões difíceis, com divisão silábica.
-- **As 24 Histórias AaZ** (Iniciativa Educação) — o vídeo oficial de cada
+- **As 24 Histórias AaZ** (Iniciativa Educação) são os textos de leitura —
+  a app sugere uma por dia, do tamanho do nível dele. O vídeo oficial de cada
   história toca dentro da app, pelo player do YouTube. Os textos não são
   copiados: são obras protegidas, e abrem no site original. Quem quiser o
   ciclo completo sem sair da app cola o texto no painel dos pais e associa-o
@@ -66,46 +63,22 @@ js/  app.js         router
      casa.js        ecrã inicial
      store.js       estado (localStorage)
      ui.js          helpers e sons
-     audio.js       voz (pt-PT) e gravação
+     audio.js       gravações (pais e criança)
      leitura.js  matematica.js  silabas.js  tempo.js  progresso.js  pais.js
-data/ textos.js  matematica.js  palavras.js  aaz.js
-      falas.js      índice do áudio (gerado)
-audio/              voz de cada texto, problema, palavra e sílaba (gerado)
-ferramentas/gerar-audio.py   gera audio/ e data/falas.js
-_teste.html         46 testes — abrir num servidor local
+data/ matematica.js  palavras.js  aaz.js
+_teste.html         42 testes — abrir num servidor local
 ```
 
 Sem dependências, sem build, sem passo de compilação. JavaScript com módulos
 ES nativos.
 
-## Áudio
+## Voz
 
-A voz preferida é a dos pais: no painel, *Gravar as leituras* guarda uma
-gravação por texto (IndexedDB, `plano-modelos`), que passa à frente de tudo
-o resto. Para o que não tiver gravação dos pais:
-
-As vozes do browser não são de confiança (no Linux, o Brave em snap não tem
-nenhuma, e as do sistema são robóticas), por isso a app traz o seu próprio
-áudio, gerado com o [Piper](https://github.com/rhasspy/piper) e a voz
-portuguesa "tugão". **Depois de mudar ou acrescentar um texto, problema ou
-palavra, é preciso voltar a gerar** — senão esse fica sem som:
-
-```sh
-# uma vez só: instalar o Piper e descarregar a voz
-python3 -m venv ferramentas/.venv
-ferramentas/.venv/bin/pip install piper-tts
-cd ferramentas/vozes   # (criar a pasta)
-curl -LO "https://huggingface.co/rhasspy/piper-voices/resolve/main/pt/pt_PT/tug%C3%A3o/medium/pt_PT-tug%C3%A3o-medium.onnx"
-curl -LO "https://huggingface.co/rhasspy/piper-voices/resolve/main/pt/pt_PT/tug%C3%A3o/medium/pt_PT-tug%C3%A3o-medium.onnx.json"
-cd ../..
-
-# sempre que os conteúdos mudam
-ferramentas/.venv/bin/python ferramentas/gerar-audio.py
-```
-
-O teste "todos os textos … têm ficheiro" falha se alguém se esquecer.
-Os textos que os pais acrescentam no painel não têm áudio: usam a voz do
-browser, quando existe.
+Não há voz sintética: as vozes do browser e as geradas por programa (Piper)
+foram experimentadas e soavam robóticas e com falhas, e no Linux o Brave em
+snap nem tem vozes. O modelo de leitura é o vídeo das Histórias AaZ ou a voz
+dos pais, gravada no painel em *Gravar as leituras* (IndexedDB,
+`plano-modelos`, uma gravação por texto).
 
 ## Correr localmente
 

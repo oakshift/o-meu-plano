@@ -6,10 +6,9 @@
 // destas contas que serve para acompanhar evolução ao longo de meses — as
 // leituras repetidas do dia a dia medem esforço, não nível.
 
-import { TEXTOS, contarPalavras } from "../data/textos.js";
 import { HISTORIAS_AAZ } from "../data/aaz.js";
 import { obter, alterar, hojeISO, ultimosDias, exportarJSON, importarJSON, reiniciarTudo, missoesAtivas } from "./store.js";
-import { el, limpar, mmss, som, cabecalho, confirmar, baralhar } from "./ui.js";
+import { el, limpar, mmss, som, cabecalho, confirmar, baralhar, contarPalavras } from "./ui.js";
 import { COMPETENCIAS, progressoCompetencia, dominada } from "./matematica.js";
 import { melhorPPMGeral } from "./leitura.js";
 import * as audio from "./audio.js";
@@ -52,7 +51,7 @@ export function render(raiz, ir) {
     const opcoes = [
       ["📏", "Avaliação da semana", "Medir palavras corretas por minuto", avaliacao],
       ["📈", "Relatório detalhado", "Leitura, matemática e tempo de ecrã", relatorio],
-      ["🎙️", "Gravar as leituras", `${textosParaGravar().filter(t => audio.temModelo(t.id)).length} de ${textosParaGravar().length} textos com a vossa voz`, leiturasModelo],
+      ["🎙️", "Gravar as leituras", textosParaGravar().length ? `${textosParaGravar().filter(t => audio.temModelo(t.id)).length} de ${textosParaGravar().length} textos com a vossa voz` : "A vossa voz a ler os vossos textos", leiturasModelo],
       ["🎧", "Ouvir as gravações", "As leituras dele, guardadas neste computador", gravacoes],
       ["✏️", "Textos", "Acrescentar textos vossos", textos],
       ["⚙️", "Definições", "Tempo de ecrã, nível, missões, PIN", definicoes]
@@ -150,9 +149,18 @@ export function render(raiz, ir) {
     limpar(raiz);
     raiz.appendChild(cabecalho("Avaliação da semana", "Um texto que ele não treinou. Um minuto. Sente-se ao lado dele.", menu));
 
+    // Para tocar nas palavras, o texto tem de estar na app: servem os textos
+    // vossos e os das histórias AaZ que tenham colado.
     const jaUsados = new Set(obter().leitura.avaliacoes.map(a => a.textoId));
-    const candidatos = TEXTOS.filter(t => t.nivel === obter().config.nivelLeitura && !jaUsados.has(t.id));
-    const lista = candidatos.length ? candidatos : TEXTOS.filter(t => t.nivel === obter().config.nivelLeitura);
+    const todos = obter().textosProprios;
+    const lidos = new Set(obter().leitura.sessoes.map(x => x.textoId));
+    const naoTreinados = todos.filter(t => !jaUsados.has(t.id) && !lidos.has(t.id) && !lidos.has("aaz-" + t.aazSlug));
+    const lista = naoTreinados.length ? naoTreinados : todos;
+    if (!lista.length) {
+      raiz.appendChild(el("div", { class: "aviso" }, "Para medir, precisam de um texto dentro da app que ele ainda não tenha treinado. Acrescentem um em Textos — de um livro dele, ou de uma história AaZ."));
+      raiz.appendChild(el("button", { class: "btn btn-grande", onClick: textos }, "Ir para Textos"));
+      return;
+    }
 
     raiz.appendChild(el("div", { class: "aviso info" }, [
       el("p", { style: "margin:0 0 6px" }, "Como funciona:"),
@@ -382,11 +390,11 @@ export function render(raiz, ir) {
 
   // ---------- leituras modelo ----------
 
-  // Os textos que ele lê na app; os associados a uma história AaZ já têm o
-  // vídeo como modelo. Primeiro os do nível em que ele está.
+  // Os vossos textos; os associados a uma história AaZ já têm o vídeo como
+  // modelo. Primeiro os do nível em que ele está.
   function textosParaGravar() {
     const nivel = obter().config.nivelLeitura;
-    return [...TEXTOS, ...obter().textosProprios.filter(t => !t.aazSlug)]
+    return obter().textosProprios.filter(t => !t.aazSlug)
       .map((t, ordem) => ({ ...t, ordem }))
       .sort((a, b) => (a.nivel !== nivel) - (b.nivel !== nivel) || a.nivel - b.nivel || a.ordem - b.ordem);
   }
@@ -396,11 +404,16 @@ export function render(raiz, ir) {
     limpar(raiz);
     raiz.appendChild(cabecalho("Gravar as leituras", "Leiam cada texto em voz alta, devagar e com expressão. É a vossa voz que ele ouve antes de ler.", menu));
     const lista = textosParaGravar();
+    if (!lista.length) {
+      raiz.appendChild(el("div", { class: "aviso info" }, "As histórias AaZ não precisam: o vídeo já faz de modelo. Quando acrescentarem um texto vosso em Textos, aparece aqui para o gravarem."));
+      raiz.appendChild(el("button", { class: "btn btn-grande", onClick: textos }, "Ir para Textos"));
+      return;
+    }
     const feitas = lista.filter(t => audio.temModelo(t.id)).length;
     raiz.appendChild(el("div", { class: "painel plano" }, [
       el("div", { class: "rotulo", texto: "Gravados" }),
       el("div", { class: "numero-medio", texto: `${feitas} de ${lista.length}` }),
-      el("p", { class: "ajuda", style: "margin:0" }, "Os que ainda não têm a vossa voz usam a voz sintética. Comecem pelos do nível em que ele está — aparecem primeiro.")
+      el("p", { class: "ajuda", style: "margin:0" }, "Sem a vossa gravação, ele lê esse texto sem ouvir antes. Os do nível em que ele está aparecem primeiro.")
     ]));
     let nivelAtual = null;
     for (const t of lista) {
@@ -412,7 +425,7 @@ export function render(raiz, ir) {
       raiz.appendChild(el("button", { class: `missao${gravado ? " feita" : ""}`, style: "margin-bottom:10px", onClick: () => gravarModelo(t) }, [
         el("div", { class: "texto" }, [
           el("div", { class: "titulo", texto: t.titulo }),
-          el("div", { class: "detalhe", texto: `${contarPalavras(t.texto)} palavras${t.tema ? "" : " · texto vosso"}` })
+          el("div", { class: "detalhe", texto: `${contarPalavras(t.texto)} palavras` })
         ]),
         el("div", { class: "marca", texto: gravado ? "✅" : "🎙️" })
       ]));
@@ -686,11 +699,13 @@ export function render(raiz, ir) {
     document.body.appendChild(inp); inp.click(); inp.remove();
   }
 
-  function apagarTudo() {
+  async function apagarTudo() {
     if (!confirmar("Apagar todo o progresso, definições e textos? Isto não se desfaz.")) return;
     if (!confirmar("Tem mesmo a certeza?")) return;
+    const tambemModelos = confirmar("Apagar também as vossas gravações das leituras? (Cancelar = ficam guardadas)");
     reiniciarTudo();
-    audio.apagarGravacoes();
+    await audio.apagarGravacoes();
+    if (tambemModelos) await audio.apagarModelos();
     location.reload();
   }
 

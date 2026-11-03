@@ -58,7 +58,6 @@ function boasVindas() {
 
 // ---------- arranque ----------
 
-audio.prepararVozes();
 pais.aplicarPreferencias();
 
 // Quando ele sai para ver bonecos, a página fica escondida ou suspensa: ao voltar,

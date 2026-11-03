@@ -12,7 +12,6 @@
 import { COMPETENCIAS, PROBLEMAS, competenciaPorId } from "../data/matematica.js";
 import { obter, alterar, hojeISO, marcarMissao } from "./store.js";
 import { el, limpar, som, vibrar, cabecalho, baralhar, escolher, temTeclado } from "./ui.js";
-import * as audio from "./audio.js";
 
 const ITENS_POR_SESSAO = 18;
 const NOVOS_POR_SESSAO = 6;
@@ -266,7 +265,7 @@ export function render(raiz, ir) {
     let indice = 0, certas = 0;
     limpar(raiz);
     const zona = el("div");
-    raiz.appendChild(cabecalho("Problemas", "Lê com calma. Podes pedir para ouvir.", inicio));
+    raiz.appendChild(cabecalho("Problemas", "Lê com calma. Se uma palavra te travar, pede ajuda a alguém.", inicio));
     raiz.appendChild(zona);
 
     function proximo() {
@@ -279,7 +278,6 @@ export function render(raiz, ir) {
       const painel = el("div", { class: "painel" }, [
         el("div", { class: "rotulo", texto: `Problema ${indice + 1} de ${lista.length}` }),
         el("p", { class: "texto-leitura", texto: p.texto, style: "margin:12px 0" }),
-        audio.temVoz(p.texto) ? el("button", { class: "btn", onClick: () => audio.falar(p.texto, { velocidade: 0.85 }) }, "🔊  Ouvir o problema") : null,
         p.dica ? el("p", { class: "ajuda", style: "margin-top:10px", texto: "Dica: " + p.dica }) : null,
         caixa
       ]);
@@ -312,7 +310,6 @@ export function render(raiz, ir) {
     function fim() {
       aoTeclar = null;
       som("fim");
-      audio.pararDeFalar();
       limpar(raiz);
       raiz.appendChild(cabecalho("Problemas feitos 👏", null, null));
       raiz.appendChild(el("div", { class: "painel centrado" }, [
@@ -321,7 +318,6 @@ export function render(raiz, ir) {
       raiz.appendChild(el("button", { class: "btn btn-grande btn-principal", onClick: inicio }, "Voltar"));
     }
 
-    limpeza = () => audio.pararDeFalar();
     proximo();
   }
 

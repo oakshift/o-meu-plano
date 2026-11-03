@@ -30,7 +30,6 @@ function t(nome, fn) {
 }
 
 try {
-  const textos = await import("./data/textos.js");
   const mat = await import("./data/matematica.js");
   const pal = await import("./data/palavras.js");
   const aaz = await import("./data/aaz.js");
@@ -46,23 +45,7 @@ try {
   res.innerHTML += `<span class="ok">✓</span> todos os módulos carregaram\n\n`;
 
   // ---- textos ----
-  t("textos: ids únicos", () => {
-    const ids = textos.TEXTOS.map(x => x.id);
-    return new Set(ids).size === ids.length || "ids repetidos";
-  });
-  t("textos: perguntas coerentes", () => {
-    for (const x of textos.TEXTOS) {
-      for (const q of (x.perguntas || [])) {
-        if (!Array.isArray(q.opcoes) || q.opcoes.length < 2) return `${x.id}: opções a menos`;
-        if (!(q.correta >= 0 && q.correta < q.opcoes.length)) return `${x.id}: índice correto inválido`;
-      }
-    }
-    return true;
-  });
-  t("textos: contagem de palavras > 0", () =>
-    textos.TEXTOS.every(x => textos.contarPalavras(x.texto) > 20) || "texto curto demais");
-  t("textos: 3 níveis preenchidos", () =>
-    [1,2,3].every(n => textos.TEXTOS.filter(x => x.nivel === n).length >= 5) || "nível pouco povoado");
+  t("ui: contarPalavras", () => ui.contarPalavras("  Uma frase\n com   cinco palavras ") === 5 || ui.contarPalavras("  Uma frase\n com   cinco palavras "));
 
   // ---- matemática: a aritmética tem de bater certo ----
   t("matemática: todas as respostas estão certas", () => {
@@ -196,7 +179,7 @@ try {
     const z = document.createElement("div");
     document.body.appendChild(z);
     leitura.render(z, () => {});
-    const btnAaz = [...z.querySelectorAll("button")].find(b => /Hist√≥rias AaZ|Histórias AaZ/.test(b.textContent));
+    const btnAaz = [...z.querySelectorAll("button")].find(b => /Escolher outra história/.test(b.textContent));
     if (!btnAaz) return "não encontrei o botão das Histórias AaZ";
     btnAaz.click();
     const cartao = z.querySelector(".missao");
@@ -222,7 +205,7 @@ try {
     const z = document.createElement("div");
     document.body.appendChild(z);
     leitura.render(z, () => {});
-    const btnAaz = [...z.querySelectorAll("button")].find(b => /Hist.rias AaZ/.test(b.textContent));
+    const btnAaz = [...z.querySelectorAll("button")].find(b => /Escolher outra história/.test(b.textContent));
     btnAaz.click();
     const cartao = z.querySelector(".missao");
     cartao.click();
@@ -233,6 +216,15 @@ try {
     return (temVideo && temTexto) || `vídeo:${temVideo} texto:${temTexto} — devia ter os dois`;
   });
 
+  t("leitura: a história de hoje é uma história AaZ do tamanho do nível dele", () => {
+    const z = document.createElement("div");
+    leitura.render(z, () => {});
+    const titulo = z.querySelector(".painel h2")?.textContent;
+    const h = aaz.HISTORIAS_AAZ.find(x => x.titulo === titulo);
+    const limite = { 1: 100, 2: 175, 3: Infinity }[store.obter().config.nivelLeitura];
+    return (!!h && h.palavras <= limite) || `sugeriu "${titulo}"`;
+  });
+
   t("leitura: texto associado a AaZ não aparece duplicado na lista normal", () => {
     const slug = aaz.HISTORIAS_AAZ[1].slug;
     store.alterar(s => {
@@ -241,9 +233,9 @@ try {
     const z = document.createElement("div");
     document.body.appendChild(z);
     leitura.render(z, () => {});
-    const btnOutro = [...z.querySelectorAll("button")].find(b => /Escolher outro texto/.test(b.textContent));
-    btnOutro.click();
-    const aparece = [...z.querySelectorAll(".titulo")].some(t => t.textContent === "Duplicado?");
+    const btnOutro = [...z.querySelectorAll("button")].find(b => /Os textos do pai e da mãe/.test(b.textContent));
+    if (btnOutro) btnOutro.click();
+    const aparece = !!btnOutro && [...z.querySelectorAll(".titulo")].some(t => t.textContent === "Duplicado?");
     store.alterar(s => { s.textosProprios = s.textosProprios.filter(t => t.id !== "teste2"); });
     z.remove();
     return !aparece || "apareceu na lista de textos normais além da lista AaZ";
@@ -286,40 +278,39 @@ try {
     return (contagem === "2" && depois === "2") || `contagem=${contagem} depois de sair=${depois}`;
   });
 
-  const { FALAS } = await import("./data/falas.js");
-  t("áudio: todos os textos, problemas, palavras e sílabas têm ficheiro", () => {
-    const falta = [
-      ...textos.TEXTOS.map(x => x.texto), ...mat.PROBLEMAS.map(x => x.texto),
-      ...pal.FAMILIAS.flatMap(f => f.palavras.flatMap(w => [w.p, ...w.s]))
-    ].filter(x => !FALAS.has(audio.impressao(x)));
-    return falta.length === 0 || `sem áudio: ${falta.slice(0, 3).join(" | ")} (correr ferramentas/gerar-audio.py)`;
-  });
-  t("áudio: impressão ignora espaços a mais", () =>
-    audio.impressao("  olá   mundo ") === audio.impressao("olá mundo") || "diferentes");
   {
-    const amostra = [textos.TEXTOS[0].texto, mat.PROBLEMAS[0].texto, pal.FAMILIAS[0].palavras[0].p];
-    const respostas = await Promise.all(amostra.map(x => fetch(`audio/${audio.impressao(x)}.mp3`, { method: "HEAD" })));
-    t("áudio: os ficheiros existem mesmo", () => respostas.every(r => r.ok) || respostas.map(r => r.status).join(","));
-  }
-
-  {
-    const id = textos.TEXTOS[0].id;
-    const jaHavia = audio.temModelo(id);
-    if (!jaHavia) await audio.guardarModelo(id, new Blob(["x"], { type: "audio/webm" }));
+    const id = "teste-modelo";
+    await audio.guardarModelo(id, new Blob(["x"], { type: "audio/webm" }));
     const tocados = [];
     const playOriginal = HTMLMediaElement.prototype.play;
     HTMLMediaElement.prototype.play = function () { tocados.push(this.src); return Promise.resolve(); };
-    audio.falar(textos.TEXTOS[0].texto, { modelo: id });
-    audio.pararDeFalar();
+    audio.ouvirModelo(id);
+    audio.pararDeTocar();
     HTMLMediaElement.prototype.play = playOriginal;
     const guardou = audio.temModelo(id);
-    if (!jaHavia) await audio.apagarModelo(id);
-    t("modelos: a gravação dos pais toca antes do áudio da app", () =>
+    await audio.apagarModelo(id);
+    t("modelos: a gravação dos pais guarda-se e toca", () =>
       (guardou && tocados[0] && tocados[0].startsWith("blob:")) || `guardou=${guardou} tocou=${tocados[0]}`);
-    t("modelos: apagar a gravação apaga mesmo", () => jaHavia || !audio.temModelo(id) || "ainda lá está");
+    t("modelos: apagar a gravação apaga mesmo", () => !audio.temModelo(id) || "ainda lá está");
   }
 
-  t("pais: o ecrã de gravar lista todos os textos para gravar", () => {
+  t("voz: não há voz sintética em lado nenhum", () => {
+    const falados = [];
+    const original = window.speechSynthesis && speechSynthesis.speak;
+    if (original) speechSynthesis.speak = u => falados.push(u.text);
+    const z = document.createElement("div");
+    document.body.appendChild(z);
+    const sair = sil.render(z, () => {});
+    [...z.querySelectorAll("button")].find(b => b.textContent === "Começar").click();
+    if (sair) sair();
+    z.remove();
+    if (original) speechSynthesis.speak = original;
+    const sobra = ["falar", "temVoz", "impressao"].filter(f => f in audio);
+    return (!falados.length && !sobra.length) || `falou: ${falados.join("|")} · funções: ${sobra.join(",")}`;
+  });
+
+  t("pais: o ecrã de gravar lista os textos dos pais", () => {
+    store.alterar(s => { s.textosProprios.push({ id: "teste3", titulo: "Texto do pai", texto: "Era uma vez um teste.", nivel: 1, aazSlug: null, perguntas: [] }); });
     const z = document.createElement("div");
     document.body.appendChild(z);
     const sair = pais.render(z, () => {});
@@ -327,15 +318,16 @@ try {
     [...z.querySelectorAll("button")].find(b => b.textContent === "Entrar").click();
     [...z.querySelectorAll("button")].find(b => /Gravar as leituras/.test(b.textContent)).click();
     const n = z.querySelectorAll("button.missao").length;
-    const esperado = textos.TEXTOS.length + store.obter().textosProprios.filter(x => !x.aazSlug).length;
+    const esperado = store.obter().textosProprios.filter(x => !x.aazSlug).length;
     [...z.querySelectorAll("button.missao")][0].click();
     const temGravar = [...z.querySelectorAll("button")].some(b => /Gravar/.test(b.textContent));
     if (sair) sair();
     z.remove();
+    store.alterar(s => { s.textosProprios = s.textosProprios.filter(t => t.id !== "teste3"); });
     return (n === esperado && temGravar) || `${n} textos na lista, esperava ${esperado}; botão gravar=${temGravar}`;
   });
 
-  t("audio: funções expostas", () => typeof audio.falar === "function" && typeof audio.podeGravar === "function");
+  t("audio: funções expostas", () => typeof audio.ouvirModelo === "function" && typeof audio.podeGravar === "function");
 
 } catch (e) {
   falhou++;
